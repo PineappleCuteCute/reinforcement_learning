@@ -60,9 +60,17 @@ robot = Robot(CELL_SIZE, CELL_SIZE, CELL_SIZE - 5)
 # Định nghĩa điểm đích
 goal_point = pygame.Rect(SCREEN_WIDTH - 2 * CELL_SIZE, SCREEN_HEIGHT - 2 * CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)
 
-# Hàm lưu vị trí của robot, chướng ngại vật tĩnh và động vào file JSON
+# Hàm lưu vị trí của robot, chướng ngại vật tĩnh và động vào file JSON theo dạng lịch sử
 def save_positions_to_file():
-    positions_data = {
+    try:
+        with open('positions.json', 'r') as f:
+            positions_data = json.load(f)
+            if not isinstance(positions_data, list):
+                positions_data = []  # Nếu không phải là danh sách, khởi tạo lại
+    except (FileNotFoundError, json.JSONDecodeError):
+        positions_data = []
+
+    new_entry = {
         "robot": {
             "position": robot.get_position()
         },
@@ -72,7 +80,7 @@ def save_positions_to_file():
 
     # Lưu tọa độ của chướng ngại vật tĩnh
     for obs in static_obstacles:
-        positions_data["static_obstacles"].append({
+        new_entry["static_obstacles"].append({
             "x": int(obs.x),
             "y": int(obs.y),
             "width": int(obs.width),
@@ -81,28 +89,40 @@ def save_positions_to_file():
 
     # Lưu tọa độ của chướng ngại vật động
     for obs in moving_obstacles:
-        positions_data["moving_obstacles"].append({
+        new_entry["moving_obstacles"].append({
             "x": int(obs.x),
             "y": int(obs.y)
         })
+
+    positions_data.append(new_entry)
 
     # Ghi dữ liệu vào file JSON
     with open('positions.json', 'w') as f:
         json.dump(positions_data, f, indent=4)
 
-# Hàm lưu vận tốc của robot và chướng ngại vật động vào file JSON
+# Hàm lưu vận tốc của robot và chướng ngại vật động vào file JSON theo dạng lịch sử
 def save_velocities_to_file():
-    velocities_data = {
+    try:
+        with open('velocities.json', 'r') as f:
+            velocities_data = json.load(f)
+            if not isinstance(velocities_data, list):
+                velocities_data = []  # Nếu không phải là danh sách, khởi tạo lại
+    except (FileNotFoundError, json.JSONDecodeError):
+        velocities_data = []
+
+    new_entry = {
         "robot_velocity": robot.get_velocity(),
         "moving_obstacle_velocities": []
     }
 
     # Lưu vận tốc của chướng ngại vật động
     for dx, dy in obstacle_directions:
-        velocities_data["moving_obstacle_velocities"].append({
+        new_entry["moving_obstacle_velocities"].append({
             "dx": int(dx),
             "dy": int(dy)
         })
+
+    velocities_data.append(new_entry)
 
     # Ghi dữ liệu vào file JSON
     with open('velocities.json', 'w') as f:
