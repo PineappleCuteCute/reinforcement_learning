@@ -8,7 +8,7 @@ pygame.init()
 # Thiết lập cửa sổ Pygame
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Mê cung với chướng ngại vật tĩnh và động, điểm bắt đầu và đích')
+pygame.display.set_caption('Môi trường với chướng ngại vật tĩnh và động, điểm bắt đầu và đích')
 
 # Định nghĩa màu sắc
 BLACK = (0, 0, 0)
@@ -18,50 +18,33 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
 
-# Định nghĩa các thông số mê cung
-CELL_SIZE = 20  # Kích thước mỗi ô của mê cung
+# Định nghĩa các thông số ô trong bản đồ
+CELL_SIZE = 20  # Kích thước mỗi ô
 ROWS = SCREEN_HEIGHT // CELL_SIZE
 COLS = SCREEN_WIDTH // CELL_SIZE
 
-# Khởi tạo mê cung ban đầu với tất cả các ô là tường
-maze = np.ones((ROWS, COLS))
+# Khởi tạo môi trường với một số chướng ngại vật tĩnh
+tiled_map = np.zeros((ROWS, COLS))
 
-# Hàm tạo mê cung sử dụng thuật toán DFS
-def generate_maze(start_row, start_col):
-    # Stack để lưu trữ vị trí các ô
-    stack = [(start_row, start_col)]
-    # Đánh dấu ô bắt đầu là ô trống
-    maze[start_row][start_col] = 0
+# Định nghĩa một số tường trong môi trường
+def create_open_map():
+    for _ in range(20):  # Tạo 20 tường ngẫu nhiên
+        start_row = random.randint(1, ROWS - 2)
+        start_col = random.randint(1, COLS - 2)
+        length = random.randint(3, 8)
+        if random.choice([True, False]):
+            # Tạo tường theo chiều ngang
+            for i in range(length):
+                if start_col + i < COLS - 1:
+                    tiled_map[start_row][start_col + i] = 1
+        else:
+            # Tạo tường theo chiều dọc
+            for i in range(length):
+                if start_row + i < ROWS - 1:
+                    tiled_map[start_row + i][start_col] = 1
 
-    # Các hướng di chuyển: lên, xuống, trái, phải
-    directions = [(-2, 0), (2, 0), (0, -2), (0, 2)]
-
-    while stack:
-        # Lấy ô hiện tại từ stack
-        current_row, current_col = stack[-1]
-        random.shuffle(directions)  # Trộn các hướng để tạo tính ngẫu nhiên
-
-        found_new_cell = False
-        for dr, dc in directions:
-            new_row, new_col = current_row + dr, current_col + dc
-
-            # Kiểm tra nếu ô mới nằm trong phạm vi và là ô tường
-            if 0 <= new_row < ROWS and 0 <= new_col < COLS and maze[new_row][new_col] == 1:
-                # Đánh dấu ô mới là ô trống
-                maze[new_row][new_col] = 0
-                # Đánh dấu ô giữa ô hiện tại và ô mới là ô trống (phá vỡ tường giữa)
-                maze[current_row + dr // 2][current_col + dc // 2] = 0
-                # Thêm ô mới vào stack
-                stack.append((new_row, new_col))
-                found_new_cell = True
-                break
-
-        # Nếu không tìm thấy ô mới để đi, quay lại ô trước đó
-        if not found_new_cell:
-            stack.pop()
-
-# Tạo mê cung từ vị trí bắt đầu (1, 1)
-generate_maze(1, 1)
+# Tạo bản đồ mở với một số chướng ngại vật tĩnh
+create_open_map()
 
 # Định nghĩa 20 chướng ngại vật động (giảm kích thước từ 20x20 xuống 15x15)
 moving_obstacles = [pygame.Rect(np.random.randint(1, COLS-1) * CELL_SIZE,
@@ -75,11 +58,11 @@ obstacle_directions = [(np.random.choice([-1, 1]), np.random.choice([-1, 1])) fo
 start_point = pygame.Rect(CELL_SIZE, CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)  # Điểm bắt đầu (xanh lá cây)
 goal_point = pygame.Rect(SCREEN_WIDTH - 2 * CELL_SIZE, SCREEN_HEIGHT - 2 * CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)  # Điểm đích (vàng)
 
-# Hàm vẽ mê cung
-def draw_maze():
+# Hàm vẽ môi trường với các chướng ngại vật tĩnh
+def draw_map():
     for row in range(ROWS):
         for col in range(COLS):
-            if maze[row][col] == 1:
+            if tiled_map[row][col] == 1:
                 pygame.draw.rect(screen, BLUE, (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
 
 # Hàm vẽ chướng ngại vật động
@@ -96,21 +79,21 @@ def update_moving_obstacles():
         new_x = obs.x + dx * 5
         new_y = obs.y + dy * 5
 
-        # Tính toán ô mới của chướng ngại vật trong mê cung
+        # Tính toán ô mới của chướng ngại vật trong bản đồ
         new_rect = obs.move(dx * 5, dy * 5)
 
-        # Kiểm tra nếu di chuyển có vượt qua tường ngoài hoặc chạm vào tường trong mê cung
+        # Kiểm tra nếu di chuyển có vượt qua tường ngoài hoặc chạm vào tường trong bản đồ
         can_move = True
 
         # Kiểm tra nếu chạm vào tường ngoài cùng
         if new_x < CELL_SIZE or new_x + obs.width > SCREEN_WIDTH - CELL_SIZE or new_y < CELL_SIZE or new_y + obs.height > SCREEN_HEIGHT - CELL_SIZE:
             can_move = False
 
-        # Kiểm tra nếu chạm vào các tường nối trong mê cung
+        # Kiểm tra nếu chạm vào các tường trong bản đồ
         if can_move:
             new_col = new_x // CELL_SIZE
             new_row = new_y // CELL_SIZE
-            if maze[new_row][new_col] == 1:
+            if tiled_map[new_row][new_col] == 1:
                 can_move = False
 
         # Nếu không chạm vào tường, cập nhật vị trí
@@ -128,8 +111,8 @@ clock = pygame.time.Clock()
 while running:
     screen.fill(WHITE)  # Làm sạch màn hình với màu trắng
 
-    # Vẽ mê cung và chướng ngại vật động
-    draw_maze()
+    # Vẽ môi trường và chướng ngại vật động
+    draw_map()
     draw_moving_obstacles()
 
     # Vẽ điểm bắt đầu và điểm đích
