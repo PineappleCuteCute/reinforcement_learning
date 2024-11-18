@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 import random
+import json
 
 # Khởi tạo Pygame
 pygame.init()
@@ -58,6 +59,15 @@ obstacle_directions = [(np.random.choice([-1, 1]), np.random.choice([-1, 1])) fo
 start_point = pygame.Rect(CELL_SIZE, CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)  # Điểm bắt đầu (xanh lá cây)
 goal_point = pygame.Rect(SCREEN_WIDTH - 2 * CELL_SIZE, SCREEN_HEIGHT - 2 * CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)  # Điểm đích (vàng)
 
+# Hàm lưu vị trí các chướng ngại vật động vào file JSON
+def save_obstacles_to_file():
+    obstacles_data = []
+    for obs in moving_obstacles:
+        obstacles_data.append({"x": obs.x, "y": obs.y, "width": obs.width, "height": obs.height})
+
+    with open('obstacle_positions.json', 'w') as f:
+        json.dump(obstacles_data, f, indent=4)
+
 # Hàm vẽ môi trường với các chướng ngại vật tĩnh
 def draw_map():
     for row in range(ROWS):
@@ -103,6 +113,9 @@ def update_moving_obstacles():
         else:
             # Nếu gặp tường, đổi hướng
             obstacle_directions[index] = (-dx, -dy)
+
+    # Lưu tọa độ của các chướng ngại vật động vào file JSON sau mỗi lần cập nhật
+    save_obstacles_to_file()
 
 # Vòng lặp chính
 running = True
