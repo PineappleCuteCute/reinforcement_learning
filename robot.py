@@ -4,7 +4,7 @@ import math
 import json
 
 class Robot:
-    def __init__(self, start_x, start_y, size, color=(0, 255, 0)):
+    def __init__(self, start_x, start_y, size, color=(255, 0, 0)):#màu đỏ
         self.rect = pygame.Rect(start_x, start_y, size, size)
         self.color = color
         self.velocity = [0, 0]  # Vận tốc ban đầu (dx, dy)
