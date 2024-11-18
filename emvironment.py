@@ -38,12 +38,13 @@ for i in range(1, ROWS-1):
         if np.random.rand() < 0.2:  # Xác suất 20% đặt tường
             maze[i][j] = 1
 
-# Định nghĩa chướng ngại vật động
-moving_obstacles = [pygame.Rect(100, 100, CELL_SIZE, CELL_SIZE),
-                    pygame.Rect(300, 300, CELL_SIZE, CELL_SIZE)]
+# Định nghĩa 20 chướng ngại vật động
+moving_obstacles = [pygame.Rect(np.random.randint(1, COLS-1) * CELL_SIZE,
+                                np.random.randint(1, ROWS-1) * CELL_SIZE,
+                                CELL_SIZE, CELL_SIZE) for _ in range(20)]
 
 # Hướng di chuyển của chướng ngại vật động
-obstacle_directions = [(1, 0), (0, 1)]  # (dx, dy) cho mỗi chướng ngại vật
+obstacle_directions = [(np.random.choice([-1, 1]), np.random.choice([-1, 1])) for _ in range(20)]
 
 # Định nghĩa điểm bắt đầu và điểm đích
 start_point = pygame.Rect(40, 40, CELL_SIZE, CELL_SIZE)  # Điểm bắt đầu (xanh lá cây)
@@ -66,15 +67,22 @@ def update_moving_obstacles():
     for index, obs in enumerate(moving_obstacles):
         dx, dy = obstacle_directions[index]
 
-        # Cập nhật vị trí
-        obs.x += dx * 5
-        obs.y += dy * 5
+        # Cập nhật vị trí tiềm năng mới
+        new_x = obs.x + dx * 5
+        new_y = obs.y + dy * 5
 
-        # Đảo ngược hướng khi gặp tường hoặc vượt quá biên
-        if obs.left < 0 or obs.right > SCREEN_WIDTH:
-            obstacle_directions[index] = (-dx, dy)
-        if obs.top < 0 or obs.bottom > SCREEN_HEIGHT:
-            obstacle_directions[index] = (dx, -dy)
+        # Tính toán ô mới của chướng ngại vật trong mê cung
+        new_col = new_x // CELL_SIZE
+        new_row = new_y // CELL_SIZE
+
+        # Kiểm tra nếu di chuyển có vượt qua tường
+        if 0 <= new_col < COLS and 0 <= new_row < ROWS and maze[new_row][new_col] == 0:
+            # Nếu không vượt qua tường, cập nhật vị trí
+            obs.x = new_x
+            obs.y = new_y
+        else:
+            # Nếu gặp tường, đổi hướng
+            obstacle_directions[index] = (-dx, -dy)
 
 # Vòng lặp chính
 running = True
