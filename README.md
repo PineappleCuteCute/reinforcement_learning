@@ -1,4 +1,4 @@
-# Reinforcement learning training example
+# Reinforcement learning training
 
 ```bash
 pip install -r requirements.txt
