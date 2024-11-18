@@ -26,6 +26,7 @@ COLS = SCREEN_WIDTH // CELL_SIZE
 
 # Khởi tạo môi trường với một số chướng ngại vật tĩnh
 tiled_map = np.zeros((ROWS, COLS))
+static_obstacles = []  # Danh sách lưu các chướng ngại vật tĩnh
 
 # Định nghĩa một số tường trong môi trường
 def create_open_map():
@@ -38,11 +39,13 @@ def create_open_map():
             for i in range(length):
                 if start_col + i < COLS - 1:
                     tiled_map[start_row][start_col + i] = 1
+                    static_obstacles.append(pygame.Rect((start_col + i) * CELL_SIZE, start_row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
         else:
             # Tạo tường theo chiều dọc
             for i in range(length):
                 if start_row + i < ROWS - 1:
                     tiled_map[start_row + i][start_col] = 1
+                    static_obstacles.append(pygame.Rect(start_col * CELL_SIZE, (start_row + i) * CELL_SIZE, CELL_SIZE, CELL_SIZE))
 
 # Tạo bản đồ mở với một số chướng ngại vật tĩnh
 create_open_map()
@@ -59,21 +62,29 @@ obstacle_directions = [(np.random.choice([-1, 1]), np.random.choice([-1, 1])) fo
 start_point = pygame.Rect(CELL_SIZE, CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)  # Điểm bắt đầu (xanh lá cây)
 goal_point = pygame.Rect(SCREEN_WIDTH - 2 * CELL_SIZE, SCREEN_HEIGHT - 2 * CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)  # Điểm đích (vàng)
 
-# Hàm lưu vị trí các chướng ngại vật động vào file JSON
+# Hàm lưu vị trí các chướng ngại vật động và tĩnh vào file JSON
 def save_obstacles_to_file():
-    obstacles_data = []
-    for obs in moving_obstacles:
-        obstacles_data.append({"x": obs.x, "y": obs.y, "width": obs.width, "height": obs.height})
+    obstacles_data = {
+        "static_obstacles": [],
+        "moving_obstacles": []
+    }
 
+    # Lưu tọa độ của chướng ngại vật tĩnh
+    for obs in static_obstacles:
+        obstacles_data["static_obstacles"].append({"x": obs.x, "y": obs.y, "width": obs.width, "height": obs.height})
+
+    # Lưu tọa độ của chướng ngại vật động
+    for obs in moving_obstacles:
+        obstacles_data["moving_obstacles"].append({"x": obs.x, "y": obs.y, "width": obs.width, "height": obs.height})
+
+    # Ghi dữ liệu vào file JSON
     with open('obstacle_positions.json', 'w') as f:
         json.dump(obstacles_data, f, indent=4)
 
 # Hàm vẽ môi trường với các chướng ngại vật tĩnh
 def draw_map():
-    for row in range(ROWS):
-        for col in range(COLS):
-            if tiled_map[row][col] == 1:
-                pygame.draw.rect(screen, BLUE, (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+    for obs in static_obstacles:
+        pygame.draw.rect(screen, BLUE, obs)
 
 # Hàm vẽ chướng ngại vật động
 def draw_moving_obstacles():
@@ -114,7 +125,7 @@ def update_moving_obstacles():
             # Nếu gặp tường, đổi hướng
             obstacle_directions[index] = (-dx, -dy)
 
-    # Lưu tọa độ của các chướng ngại vật động vào file JSON sau mỗi lần cập nhật
+    # Lưu tọa độ của các chướng ngại vật động và tĩnh vào file JSON sau mỗi lần cập nhật
     save_obstacles_to_file()
 
 # Vòng lặp chính
