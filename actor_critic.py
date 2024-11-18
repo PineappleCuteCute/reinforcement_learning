@@ -12,6 +12,7 @@ from torch.distributions import Categorical
 
 # Cart Pole
 
+# Thiết lập các tham số thông qua argparse
 parser = argparse.ArgumentParser(description='PyTorch actor-critic example')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor (default: 0.99)')
@@ -23,88 +24,84 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='interval between training status logs (default: 10)')
 args = parser.parse_args()
 
-
+# Tạo môi trường CartPole và thiết lập seed ngẫu nhiên
 env = gym.make('CartPole-v1')
 env.reset(seed=args.seed)
 torch.manual_seed(args.seed)
 
-
+# Cấu trúc lưu log_prob và value
 SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 
-
+# Định nghĩa mô hình Actor-Critic
 class Policy(nn.Module):
     """
-    implements both actor and critic in one model
+    Triển khai cả actor và critic trong cùng một mô hình
     """
     def __init__(self):
         super(Policy, self).__init__()
-        self.affine1 = nn.Linear(4, 128)
+        self.affine1 = nn.Linear(4, 128)  # Lớp fully-connected đầu vào với 128 đơn vị
 
-        # actor's layer
+        # Lớp của actor
         self.action_head = nn.Linear(128, 2)
 
-        # critic's layer
+        # Lớp của critic
         self.value_head = nn.Linear(128, 1)
 
-        # action & reward buffer
+        # Bộ nhớ cho hành động và phần thưởng
         self.saved_actions = []
         self.rewards = []
 
     def forward(self, x):
         """
-        forward of both actor and critic
+        Truyền qua của cả actor và critic
         """
-        x = F.relu(self.affine1(x))
+        x = F.relu(self.affine1(x))  # Kích hoạt bằng ReLU
 
-        # actor: choses action to take from state s_t
-        # by returning probability of each action
+        # Actor: chọn hành động từ trạng thái s_t bằng cách trả về xác suất của mỗi hành động
         action_prob = F.softmax(self.action_head(x), dim=-1)
 
-        # critic: evaluates being in the state s_t
+        # Critic: đánh giá trạng thái s_t
         state_values = self.value_head(x)
 
-        # return values for both actor and critic as a tuple of 2 values:
-        # 1. a list with the probability of each action over the action space
-        # 2. the value from state s_t
+        # Trả về giá trị cho cả actor và critic (tuple gồm xác suất và giá trị)
         return action_prob, state_values
 
-
+# Khởi tạo mô hình và bộ tối ưu
 model = Policy()
 optimizer = optim.Adam(model.parameters(), lr=3e-2)
-eps = np.finfo(np.float32).eps.item()
+eps = np.finfo(np.float32).eps.item()  # Nhỏ nhất để tránh chia cho 0
 
-
+# Hàm để chọn hành động từ trạng thái hiện tại
 def select_action(state):
     state = torch.from_numpy(state).float()
     probs, state_value = model(state)
 
-    # create a categorical distribution over the list of probabilities of actions
+    # Tạo phân phối xác suất của các hành động
     m = Categorical(probs)
 
-    # and sample an action using the distribution
+    # Lấy mẫu hành động từ phân phối
     action = m.sample()
 
-    # save to action buffer
+    # Lưu vào bộ nhớ hành động
     model.saved_actions.append(SavedAction(m.log_prob(action), state_value))
 
-    # the action to take (left or right)
+    # Trả về hành động để thực hiện (trái hoặc phải)
     return action.item()
 
-
+# Hàm kết thúc một episode và thực hiện cập nhật gradient
 def finish_episode():
     """
-    Training code. Calculates actor and critic loss and performs backprop.
+    Huấn luyện: Tính toán actor và critic loss và thực hiện backpropagation
     """
     R = 0
     saved_actions = model.saved_actions
-    policy_losses = [] # list to save actor (policy) loss
-    value_losses = [] # list to save critic (value) loss
-    returns = [] # list to save the true values
+    policy_losses = []  # Lưu loss của actor
+    value_losses = []  # Lưu loss của critic
+    returns = []  # Lưu giá trị thực
 
-    # calculate the true value using rewards returned from the environment
+    # Tính giá trị thực từ phần thưởng trả về từ môi trường
     for r in model.rewards[::-1]:
-        # calculate the discounted value
-        R = r + args.gamma * R
+        R = r + args.gamma * R  # Giá trị giảm dần
         returns.insert(0, R)
 
     returns = torch.tensor(returns)
@@ -113,45 +110,43 @@ def finish_episode():
     for (log_prob, value), R in zip(saved_actions, returns):
         advantage = R - value.item()
 
-        # calculate actor (policy) loss
+        # Tính actor (policy) loss
         policy_losses.append(-log_prob * advantage)
 
-        # calculate critic (value) loss using L1 smooth loss
+        # Tính critic (value) loss sử dụng L1 smooth loss
         value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
 
-    # reset gradients
+    # Reset gradient
     optimizer.zero_grad()
 
-    # sum up all the values of policy_losses and value_losses
+    # Tổng hợp các giá trị của policy_losses và value_losses
     loss = torch.stack(policy_losses).sum() + torch.stack(value_losses).sum()
 
-    # perform backprop
+    # Thực hiện backpropagation
     loss.backward()
     optimizer.step()
 
-    # reset rewards and action buffer
+    # Xóa bộ nhớ phần thưởng và hành động
     del model.rewards[:]
     del model.saved_actions[:]
 
-
+# Hàm chính để huấn luyện tác nhân
 def main():
     running_reward = 10
 
-    # run infinitely many episodes
+    # Vòng lặp cho các episode
     for i_episode in count(1):
 
-        # reset environment and episode reward
+        # Reset môi trường và phần thưởng của episode
         state, _ = env.reset()
         ep_reward = 0
 
-        # for each episode, only run 9999 steps so that we don't
-        # infinite loop while learning
+        # Mỗi episode chỉ chạy 9999 bước để tránh vòng lặp vô hạn
         for t in range(1, 10000):
-
-            # select action from policy
+            # Chọn hành động từ chính sách
             action = select_action(state)
 
-            # take the action
+            # Thực hiện hành động
             state, reward, done, _, _ = env.step(action)
 
             if args.render:
@@ -162,23 +157,23 @@ def main():
             if done:
                 break
 
-        # update cumulative reward
+        # Cập nhật phần thưởng tích lũy
         running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
 
-        # perform backprop
+        # Thực hiện backpropagation
         finish_episode()
 
-        # log results
+        # Ghi nhận kết quả
         if i_episode % args.log_interval == 0:
             print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
                   i_episode, ep_reward, running_reward))
 
-        # check if we have "solved" the cart pole problem
+        # Kiểm tra nếu bài toán đã được "giải"
         if running_reward > env.spec.reward_threshold:
             print("Solved! Running reward is now {} and "
                   "the last episode runs to {} time steps!".format(running_reward, t))
             break
 
-
+# Chạy hàm chính khi script được thực thi
 if __name__ == '__main__':
     main()
