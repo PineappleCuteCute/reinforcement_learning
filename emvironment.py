@@ -7,13 +7,15 @@ pygame.init()
 # Thiết lập cửa sổ Pygame
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Mê cung với chướng ngại vật tĩnh và động')
+pygame.display.set_caption('Mê cung với chướng ngại vật tĩnh và động, điểm bắt đầu và đích')
 
 # Định nghĩa màu sắc
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+YELLOW = (255, 255, 0)
 
 # Định nghĩa các thông số mê cung
 CELL_SIZE = 40  # Kích thước mỗi ô của mê cung
@@ -42,6 +44,10 @@ moving_obstacles = [pygame.Rect(100, 100, CELL_SIZE, CELL_SIZE),
 
 # Hướng di chuyển của chướng ngại vật động
 obstacle_directions = [(1, 0), (0, 1)]  # (dx, dy) cho mỗi chướng ngại vật
+
+# Định nghĩa điểm bắt đầu và điểm đích
+start_point = pygame.Rect(40, 40, CELL_SIZE, CELL_SIZE)  # Điểm bắt đầu (xanh lá cây)
+goal_point = pygame.Rect(SCREEN_WIDTH - 2 * CELL_SIZE, SCREEN_HEIGHT - 2 * CELL_SIZE, CELL_SIZE, CELL_SIZE)  # Điểm đích (vàng)
 
 # Hàm vẽ mê cung
 def draw_maze():
@@ -80,6 +86,10 @@ while running:
     # Vẽ mê cung và chướng ngại vật động
     draw_maze()
     draw_moving_obstacles()
+
+    # Vẽ điểm bắt đầu và điểm đích
+    pygame.draw.rect(screen, GREEN, start_point)
+    pygame.draw.rect(screen, YELLOW, goal_point)
 
     # Cập nhật vị trí chướng ngại vật động
     update_moving_obstacles()
