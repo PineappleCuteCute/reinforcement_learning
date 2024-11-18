@@ -2,13 +2,12 @@ import pygame
 import numpy as np
 import random
 import json
-from robot import Robot  # Import lớp Robot từ file robot.py
 
 # Khởi tạo Pygame
 pygame.init()
 
 # Thiết lập cửa sổ Pygame
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+SCREEN_WIDTH, SCREEN_HEIGHT = 600, 600 #Kích thước môi trường
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Môi trường với chướng ngại vật tĩnh và động, điểm bắt đầu và đích')
 
@@ -31,7 +30,7 @@ static_obstacles = []  # Danh sách lưu các chướng ngại vật tĩnh
 
 # Định nghĩa một số tường trong môi trường
 def create_open_map():
-    for _ in range(20):  # Tạo 20 tường ngẫu nhiên
+    for _ in range(20):  # Tạo 20 tường ngẫu nhiên!!!
         start_row = random.randint(1, ROWS - 2)
         start_col = random.randint(1, COLS - 2)
         length = random.randint(3, 8)
@@ -51,7 +50,7 @@ def create_open_map():
 # Tạo bản đồ mở với một số chướng ngại vật tĩnh
 create_open_map()
 
-# Định nghĩa 20 chướng ngại vật động (giảm kích thước từ 20x20 xuống 15x15)
+# Định nghĩa 20 chướng ngại vật động (giảm kích thước từ 20x20 xuống 15x15)!!!
 moving_obstacles = [pygame.Rect(np.random.randint(1, COLS-1) * CELL_SIZE,
                                 np.random.randint(1, ROWS-1) * CELL_SIZE,
                                 CELL_SIZE - 5, CELL_SIZE - 5) for _ in range(20)]
@@ -59,13 +58,11 @@ moving_obstacles = [pygame.Rect(np.random.randint(1, COLS-1) * CELL_SIZE,
 # Hướng di chuyển của chướng ngại vật động
 obstacle_directions = [(np.random.choice([-1, 1]), np.random.choice([-1, 1])) for _ in range(20)]
 
-# Khởi tạo Robot từ lớp Robot đã định nghĩa
-robot = Robot(CELL_SIZE, CELL_SIZE, CELL_SIZE - 5)
-
-# Định nghĩa điểm đích
+# Định nghĩa điểm bắt đầu và điểm đích
+start_point = pygame.Rect(CELL_SIZE, CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)  # Điểm bắt đầu (xanh lá cây)
 goal_point = pygame.Rect(SCREEN_WIDTH - 2 * CELL_SIZE, SCREEN_HEIGHT - 2 * CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)  # Điểm đích (vàng)
 
-# Hàm lưu vị trí các chướng ngại vật động và tĩnh vào file JSON
+# Hàm lưu vị trí các chướng ngại vật động và tĩnh vào file JSON!!!
 def save_obstacles_to_file():
     obstacles_data = {
         "static_obstacles": [],
@@ -142,29 +139,17 @@ while running:
     draw_map()
     draw_moving_obstacles()
 
-    # Vẽ điểm bắt đầu (robot) và điểm đích
-    robot.draw(screen)
+    # Vẽ điểm bắt đầu và điểm đích
+    pygame.draw.rect(screen, GREEN, start_point)
     pygame.draw.rect(screen, YELLOW, goal_point)
 
     # Cập nhật vị trí chướng ngại vật động
     update_moving_obstacles()
 
-    # Cập nhật vị trí robot
-    robot.move()
-
     # Kiểm tra sự kiện
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                robot.set_velocity(0, -5)
-            elif event.key == pygame.K_DOWN:
-                robot.set_velocity(0, 5)
-            elif event.key == pygame.K_LEFT:
-                robot.set_velocity(-5, 0)
-            elif event.key == pygame.K_RIGHT:
-                robot.set_velocity(5, 0)
 
     # Cập nhật màn hình
     pygame.display.flip()
