@@ -1,4 +1,3 @@
-# File: environment.py
 import pygame
 import numpy as np
 import random
@@ -61,14 +60,53 @@ robot = Robot(CELL_SIZE, CELL_SIZE, CELL_SIZE - 5)
 # Định nghĩa điểm đích
 goal_point = pygame.Rect(SCREEN_WIDTH - 2 * CELL_SIZE, SCREEN_HEIGHT - 2 * CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)
 
-# Hàm lưu vận tốc của robot và chướng ngại vật vào file JSON
-def save_velocity_to_file(robot_velocity, obstacle_velocities):
-    data = {
-        "robot_velocity": robot_velocity,
-        "obstacle_velocities": obstacle_velocities
+# Hàm lưu vị trí của robot, chướng ngại vật tĩnh và động vào file JSON
+def save_positions_to_file():
+    positions_data = {
+        "robot": {
+            "position": robot.get_position()
+        },
+        "static_obstacles": [],
+        "moving_obstacles": []
     }
-    with open('velocity_data.json', 'w') as f:
-        json.dump(data, f, indent=4)
+
+    # Lưu tọa độ của chướng ngại vật tĩnh
+    for obs in static_obstacles:
+        positions_data["static_obstacles"].append({
+            "x": int(obs.x),
+            "y": int(obs.y),
+            "width": int(obs.width),
+            "height": int(obs.height)
+        })
+
+    # Lưu tọa độ của chướng ngại vật động
+    for obs in moving_obstacles:
+        positions_data["moving_obstacles"].append({
+            "x": int(obs.x),
+            "y": int(obs.y)
+        })
+
+    # Ghi dữ liệu vào file JSON
+    with open('positions.json', 'w') as f:
+        json.dump(positions_data, f, indent=4)
+
+# Hàm lưu vận tốc của robot và chướng ngại vật động vào file JSON
+def save_velocities_to_file():
+    velocities_data = {
+        "robot_velocity": robot.get_velocity(),
+        "moving_obstacle_velocities": []
+    }
+
+    # Lưu vận tốc của chướng ngại vật động
+    for dx, dy in obstacle_directions:
+        velocities_data["moving_obstacle_velocities"].append({
+            "dx": int(dx),
+            "dy": int(dy)
+        })
+
+    # Ghi dữ liệu vào file JSON
+    with open('velocities.json', 'w') as f:
+        json.dump(velocities_data, f, indent=4)
 
 # Vòng lặp chính
 running = True
@@ -113,10 +151,9 @@ while running:
     # Cập nhật vị trí robot
     robot.move()
 
-    # Lấy vận tốc hiện tại và lưu vào file
-    robot_velocity = robot.get_velocity()
-    obstacle_velocities = [(dx * 5, dy * 5) for dx, dy in obstacle_directions]
-    save_velocity_to_file(robot_velocity, obstacle_velocities)
+    # Lưu trạng thái của robot và các chướng ngại vật
+    save_positions_to_file()
+    save_velocities_to_file()
 
     # Kiểm tra sự kiện
     for event in pygame.event.get():
