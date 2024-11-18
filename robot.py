@@ -1,5 +1,5 @@
 # File: robot.py
-# Robot Module Integration
+#Robot Module Integration
 import pygame
 import math
 
@@ -28,7 +28,7 @@ class Robot:
 
     def calculate_distance(self, target_x, target_y):
         # Tính khoảng cách từ robot tới một điểm (x, y)
-        return math.sqrt((target_x - self.rect.x) ** 2 + (target_y - self.rect.y) ** 2)
+        return math.hypot(target_x - self.rect.x, target_y - self.rect.y)
 
     def get_position(self):
         # Lấy vị trí hiện tại của robot
