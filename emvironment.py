@@ -5,7 +5,7 @@ import numpy as np
 pygame.init()
 
 # Thiết lập cửa sổ Pygame
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 800
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Mê cung với chướng ngại vật tĩnh và động, điểm bắt đầu và đích')
 
@@ -55,7 +55,7 @@ def draw_maze():
     for row in range(ROWS):
         for col in range(COLS):
             if maze[row][col] == 1:
-                pygame.draw.rect(screen, BLUE, (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+                pygame.draw.rect(screen, BLACK, (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
 
 # Hàm vẽ chướng ngại vật động
 def draw_moving_obstacles():
