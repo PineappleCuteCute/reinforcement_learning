@@ -38,20 +38,20 @@ class Robot:
         # Lấy vận tốc hiện tại của robot
         return self.velocity
 
-    def save_state_to_file(self, position_filename="robot_position.json", velocity_filename="robot_velocity.json"):
-        # Lưu vị trí của robot vào file JSON
-        position_data = {
-            "position": self.get_position()
-        }
-        with open(position_filename, 'w') as f:
-            json.dump(position_data, f, indent=4)
+    # def save_state_to_file(self, position_filename="robot_position.json", velocity_filename="robot_velocity.json"):
+    #     # Lưu vị trí của robot vào file JSON
+    #     position_data = {
+    #         "position": self.get_position()
+    #     }
+    #     with open(position_filename, 'w') as f:
+    #         json.dump(position_data, f, indent=4)
 
-        # Lưu vận tốc của robot vào file JSON
-        velocity_data = {
-            "velocity": self.get_velocity()
-        }
-        with open(velocity_filename, 'w') as f:
-            json.dump(velocity_data, f, indent=4)
+    #     # Lưu vận tốc của robot vào file JSON
+    #     velocity_data = {
+    #         "velocity": self.get_velocity()
+    #     }
+    #     with open(velocity_filename, 'w') as f:
+    #         json.dump(velocity_data, f, indent=4)
 
 
 
