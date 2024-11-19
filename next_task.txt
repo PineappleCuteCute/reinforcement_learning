@@ -1,0 +1,6 @@
+-chọn định hướng -dx, -dy
+hướng, vận tốc, gia tốc, nảy lại
+state, action, reward như thế nào
+obstacles, robot
+-slide định nghĩa lại đầu vào, đầu ra, reward, con đường vẽ ra, tiêu chí đường đi, tránh chướng ngại vật thế nào, ra sao
+!không được va chạm các obstacles(dynnamic, static)
