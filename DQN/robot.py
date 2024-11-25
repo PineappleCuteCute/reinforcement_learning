@@ -8,10 +8,18 @@ class Robot:
         self.velocity_x = 0
         self.velocity_y = 0
 
-    def move(self):
-        """Di chuyển robot dựa trên vận tốc."""
-        self.x += self.velocity_x
-        self.y += self.velocity_y
+    def move(self, action=None):
+        """
+        Di chuyển robot.
+        Nếu `action` được cung cấp, di chuyển theo [dx, dy].
+        Nếu không, di chuyển dựa trên vận tốc hiện tại.
+        """
+        if action:
+            self.x += action[0]
+            self.y += action[1]
+        else:
+            self.x += self.velocity_x
+            self.y += self.velocity_y
 
         # Giới hạn robot trong màn hình
         self.x = max(self.size, min(self.x, 800 - self.size))
