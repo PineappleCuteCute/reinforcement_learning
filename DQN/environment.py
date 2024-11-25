@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from robot import Robot
+import pygame
 
 class Environment:
     def __init__(self, width, height, num_dynamic_obs=5, num_static_obs=5):
@@ -34,25 +35,49 @@ class Environment:
     #     done = self._check_collision()
     #     reward = self._calculate_reward(done)
     #     return self._get_state(), reward, done
-    
-    def step(self, action): #Robot nhận action từ env.step() và di chuyển theo vector này
+    '''step '''
+    # def step(self, action): #Robot nhận action từ env.step() và di chuyển theo vector này
+    #     """Thực hiện một bước mô phỏng."""
+    #     # Tính toán vị trí dự kiến sau hành động
+    #     proposed_x = self.robot.x + action[0]
+    #     proposed_y = self.robot.y + action[1]
+
+    #     # Kiểm tra xem vị trí dự kiến có va chạm với chướng ngại vật không
+    #     if not self._check_proposed_collision(proposed_x, proposed_y):
+    #         # Nếu không va chạm, thực hiện di chuyển
+    #         self.robot.move(action)
+    #     else:
+    #         # Nếu va chạm, không di chuyển robot
+    #         print("Robot không thể di chuyển vì có va chạm.")
+
+    #     # Cập nhật vị trí chướng ngại vật động
+    #     self._update_moving_obstacles()
+
+    #     # Kiểm tra va chạm hiện tại (cho phần thưởng và kết thúc episode)
+    #     done = self._check_collision()
+    #     reward = self._calculate_reward(done)
+
+    #     return self._get_state(), reward, done
+
+    def step(self, action):
         """Thực hiện một bước mô phỏng."""
-        # Tính toán vị trí dự kiến sau hành động
+        # Tính toán vị trí dự kiến
         proposed_x = self.robot.x + action[0]
         proposed_y = self.robot.y + action[1]
 
-        # Kiểm tra xem vị trí dự kiến có va chạm với chướng ngại vật không
+        # Kiểm tra va chạm trước khi di chuyển
         if not self._check_proposed_collision(proposed_x, proposed_y):
-            # Nếu không va chạm, thực hiện di chuyển
-            self.robot.move(action)
+            self.robot.move(action)  # Di chuyển nếu không va chạm
         else:
-            # Nếu va chạm, không di chuyển robot
             print("Robot không thể di chuyển vì có va chạm.")
 
         # Cập nhật vị trí chướng ngại vật động
         self._update_moving_obstacles()
 
-        # Kiểm tra va chạm hiện tại (cho phần thưởng và kết thúc episode)
+        # Kiểm tra va chạm sau khi di chuyển
+        self._check_collision()
+
+        # Tính phần thưởng và kiểm tra kết thúc
         done = self._check_collision()
         reward = self._calculate_reward(done)
 
@@ -69,14 +94,27 @@ class Environment:
             if obs['position'][1] < 0 or obs['position'][1] > self.height:
                 obs['velocity'][1] = -dy
 
-    def _check_collision(self): #kiểm tra xem robot có va chạm cnv hay không -> reward!!!!!
+    # def _check_collision(self): #kiểm tra xem robot có va chạm cnv hay không -> reward!!!!!
+    #     rx, ry = self.robot.get_position()
+    #     for obs in self.dynamic_obstacles + self.static_obstacles:
+    #         ox, oy = obs['position']
+    #         distance = np.linalg.norm([rx - ox, ry - oy])
+    #         if distance < (self.robot.size + obs['size']) / 2:
+    #             return True
+    #     return False
+
+    def _check_collision(self):
+        """Kiểm tra va chạm giữa robot và các chướng ngại vật hiện tại."""
         rx, ry = self.robot.get_position()
         for obs in self.dynamic_obstacles + self.static_obstacles:
             ox, oy = obs['position']
             distance = np.linalg.norm([rx - ox, ry - oy])
             if distance < (self.robot.size + obs['size']) / 2:
-                return True
-        return False
+                print("Robot đã va chạm với chướng ngại vật! Dừng chương trình.")
+                pygame.quit()  # Thoát Pygame
+                exit(1)  # Dừng chương trình
+        return False  # Không có va chạm
+
     
     def _check_proposed_collision(self, x, y):
         """Kiểm tra xem vị trí dự kiến có va chạm với bất kỳ chướng ngại vật nào không."""

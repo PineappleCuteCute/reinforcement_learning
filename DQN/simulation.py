@@ -74,6 +74,25 @@ def save_to_csv(data):
         writer = csv.writer(file)
         writer.writerow(data)
 
+# Hàm kiểm tra va chạm
+def check_collision():
+    """Kiểm tra va chạm giữa robot và các chướng ngại vật."""
+    robot_rect = pygame.Rect(robot.x - robot.size, robot.y - robot.size, robot.size * 2, robot.size * 2)
+
+    # Kiểm tra va chạm với chướng ngại vật tĩnh
+    for obs in static_obstacles:
+        if robot_rect.colliderect(obs):
+            print("Robot đã va chạm với chướng ngại vật tĩnh! Dừng chương trình.")
+            pygame.quit()
+            exit(1)
+
+    # Kiểm tra va chạm với chướng ngại vật động
+    for obs in moving_obstacles:
+        if robot_rect.colliderect(obs):
+            print("Robot đã va chạm với chướng ngại vật động! Dừng chương trình.")
+            pygame.quit()
+            exit(1)
+
 # Hàm cập nhật vị trí chướng ngại vật động
 def update_moving_obstacles():
     """Cập nhật vị trí và hướng của chướng ngại vật động."""
@@ -135,6 +154,9 @@ while running:
     # Cập nhật vị trí robot
     robot.move()
     robot_trail.append(robot.get_position())
+
+    # Kiểm tra va chạm
+    check_collision()
 
     # Ghi dữ liệu vào CSV
     collision = any([robot.get_position()[0] == obs.x and robot.get_position()[1] == obs.y for obs in moving_obstacles])
