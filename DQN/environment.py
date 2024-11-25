@@ -89,22 +89,18 @@ class Environment:
 
     def _get_state(self):
         """Trả về trạng thái hiện tại dưới dạng vector."""
-        # Lấy vị trí robot (chuyển thành list)
         state = list(self.robot.get_position())
-
-        # Thêm vị trí và vận tốc của chướng ngại vật động
         for obs in self.dynamic_obstacles:
-            state.extend(obs['position'])  # Vị trí
-            state.extend(obs['velocity'])  # Vận tốc
-
-        # Thêm vị trí của chướng ngại vật tĩnh
+            state.extend(obs['position'])
+            state.extend(obs['velocity'])
         for obs in self.static_obstacles:
             state.extend(obs['position'])
-
-        # Thêm vị trí mục tiêu
         state.extend(self.goal)
 
-        return np.array(state, dtype=np.float32)  # Trả về mảng numpy
+        # In kích thước state để kiểm tra
+        print(f"State: {state}, Length: {len(state)}")
+        return np.array(state, dtype=np.float32)
+
 
 
 

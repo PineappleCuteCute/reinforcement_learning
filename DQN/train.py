@@ -4,6 +4,10 @@ from dqn import DQN, ReplayMemory, select_action
 from environment import Environment
 import torch.nn.functional as F
 
+# Khởi tạo môi trường
+width, height = 800, 600
+env = Environment(width, height)
+
 def optimize_model(policy_net, target_net, memory, optimizer, gamma):
     if len(memory) < batch_size:
         return
@@ -36,7 +40,8 @@ def optimize_model(policy_net, target_net, memory, optimizer, gamma):
 
 # Thông số
 width, height = 800, 600
-state_size = 8  # Định nghĩa kích thước state
+# Lấy state_size từ kích thước state thực tế
+state_size = len(env.reset())
 action_size = 5  # Các hành động: lên, xuống, trái, phải, giữ nguyên
 gamma = 0.99
 epsilon = 1.0
@@ -85,3 +90,4 @@ for episode in range(1000):
         target_net.load_state_dict(policy_net.state_dict())
 
     print(f"Episode {episode}: Total Reward: {total_reward}")
+    print(f"State Size: {state_size}, Action Size: {action_size}")
