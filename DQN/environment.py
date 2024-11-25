@@ -85,6 +85,7 @@ class Environment:
 
 
     def _update_moving_obstacles(self): #cập nhật trạng thái hành động cho cnv động
+        #tạo vector lộ trình di chuyển cho chướng ngại vật động, nẩy phản xạ, khi nào -dx -dy
         for obs in self.dynamic_obstacles:
             dx, dy = obs['velocity']
             obs['position'][0] += dx * 5

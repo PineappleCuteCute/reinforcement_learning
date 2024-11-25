@@ -8,7 +8,8 @@ obstacles, robot
 
 Nhóm/ "Đào Thành Mạnh
 Hà Trung Kiên"	"
-- tạo vector lộ trình di chuyển cho chướng ngại vật động, nẩy phản xạ, khi nào -dx -dy, 
+- tạo vector lộ trình di chuyển cho chướng ngại vật động, nẩy phản xạ, khi nào -dx -dy,(simulation.py)
+                                                                                        (environment.py)
 - định nghĩa    state, (environment.py)
                 action, (train.py) -> Robot nhận action từ env.step() và di chuyển theo vector này(environment.py)
                 reward, (environment.py)

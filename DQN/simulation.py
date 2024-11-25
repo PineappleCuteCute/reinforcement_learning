@@ -95,6 +95,7 @@ def check_collision(): #robot không va chạm vao chướng ngại vật!!!!
 
 # Hàm cập nhật vị trí chướng ngại vật động
 def update_moving_obstacles(): #tranning?, chướng ngại vật đông tĩnh lao vào nhau !!!!
+    #tạo vector lộ trình di chuyển cho chướng ngại vật động, nẩy phản xạ, khi nào -dx -dy
     """Cập nhật vị trí và hướng của chướng ngại vật động."""
     for index, obs in enumerate(moving_obstacles):
         dx, dy = obstacle_directions[index]
