@@ -72,7 +72,7 @@ def reflect_velocity(velocity, normal): #Tính vận tốc phản xạ dựa tr�
 
 # Thay vì cập nhật chướng ngại vật động trong vòng lặp chính, ta gọi hàm update_moving_obstacles
 def update_moving_obstacles():
-    """Cập nhật vị trí và hướng của chướng ngại vật động."""
+    """Cập nhật vị trí và hướng của chướng ngại vật động, đảm bảo không xuyên qua chướng ngại vật tĩnh."""
     for index, obs in enumerate(moving_obstacles):
         dx, dy = obstacle_directions[index]
         new_x = obs.x + dx * 5
@@ -85,27 +85,30 @@ def update_moving_obstacles():
             dy = -dy
 
         # Kiểm tra va chạm với chướng ngại vật tĩnh
+        collided = False
         for static_obs in static_obstacles:
-            if obs.colliderect(static_obs): #Sử dụng colliderect để kiểm tra va chạm.
-                # Tính vector pháp tuyến
-                normal = [0, 0]
+            if obs.colliderect(static_obs):
+                collided = True
+                # Đưa chướng ngại vật động ra khỏi vùng va chạm
                 if abs(obs.right - static_obs.left) < 5:  # Va chạm từ bên phải
-                    normal = [-1, 0]
+                    obs.x -= 5
+                    dx = -abs(dx)  # Phản xạ sang trái
                 elif abs(obs.left - static_obs.right) < 5:  # Va chạm từ bên trái
-                    normal = [1, 0]
+                    obs.x += 5
+                    dx = abs(dx)  # Phản xạ sang phải
                 elif abs(obs.bottom - static_obs.top) < 5:  # Va chạm từ phía dưới
-                    normal = [0, -1]
+                    obs.y -= 5
+                    dy = -abs(dy)  # Phản xạ lên trên
                 elif abs(obs.top - static_obs.bottom) < 5:  # Va chạm từ phía trên
-                    normal = [0, 1]
+                    obs.y += 5
+                    dy = abs(dy)  # Phản xạ xuống dưới
+                break
 
-                # Tính vận tốc phản xạ
-                new_velocity = reflect_velocity([dx, dy], normal)
-                dx, dy = new_velocity
-
-        # Cập nhật vị trí
-        obstacle_directions[index] = (dx, dy)
-        obs.x += dx * 5
-        obs.y += dy * 5
+        if not collided:  # Nếu không va chạm, cập nhật vị trí
+            obs.x = new_x
+            obs.y = new_y
+        else:
+            obstacle_directions[index] = (dx, dy)
 
 # Vòng lặp chính
 running = True
