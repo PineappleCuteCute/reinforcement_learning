@@ -10,7 +10,7 @@ pygame.init()
 # Thiết lập cửa sổ Pygame
 SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Môi trường với chướng ngại vật tĩnh và động, điểm bắt đầu và đích')
+pygame.display.set_caption('Môi trường với phản xạ động')
 
 # Định nghĩa màu sắc
 WHITE = (255, 255, 255)
@@ -28,7 +28,7 @@ COLS = SCREEN_WIDTH // CELL_SIZE
 tiled_map = np.zeros((ROWS, COLS))
 static_obstacles = []
 
-# Định nghĩa một số tường trong môi trường
+# Định nghĩa tường trong môi trường
 def create_open_map():
     for _ in range(20):
         start_row = random.randint(1, ROWS - 2)
@@ -47,38 +47,65 @@ def create_open_map():
 
 create_open_map()
 
-# Định nghĩa 20 chướng ngại vật động
+# Định nghĩa chướng ngại vật động
 moving_obstacles = [pygame.Rect(np.random.randint(1, COLS-1) * CELL_SIZE,
                                 np.random.randint(1, ROWS-1) * CELL_SIZE,
                                 CELL_SIZE - 5, CELL_SIZE - 5) for _ in range(20)]
-
-# Hướng di chuyển của chướng ngại vật động
 obstacle_directions = [(np.random.choice([-1, 1]), np.random.choice([-1, 1])) for _ in range(20)]
 
-# Khởi tạo Robot từ lớp Robot đã định nghĩa
+# Khởi tạo Robot
 robot = Robot(CELL_SIZE, CELL_SIZE, CELL_SIZE - 5)
 
 # Định nghĩa điểm đích
 goal_point = pygame.Rect(SCREEN_WIDTH - 2 * CELL_SIZE, SCREEN_HEIGHT - 2 * CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)
 
-# Lưu dữ liệu đường đi của robot
+# Lưu đường đi của robot
 robot_trail = []
 
-def save_positions_to_file():
-    """Lưu vị trí robot và các chướng ngại vật vào file JSON."""
-    with open('positions.json', 'w') as f:
-        positions_data = {
-            "robot_trail": robot_trail,
-            "static_obstacles": [
-                {"x": obs.x, "y": obs.y, "width": obs.width, "height": obs.height}
-                for obs in static_obstacles
-            ],
-            "moving_obstacles": [
-                {"x": obs.x, "y": obs.y}
-                for obs in moving_obstacles
-            ]
-        }
-        json.dump(positions_data, f, indent=4)
+# cách xử lý khi va chạm
+def reflect_velocity(velocity, normal): #Tính vận tốc phản xạ dựa trên vector pháp tuyến.
+    """Tính vận tốc phản xạ dựa trên vector pháp tuyến."""
+    velocity = np.array(velocity)
+    normal = np.array(normal)
+    v_new = velocity - 2 * np.dot(velocity, normal) * normal
+    return v_new.tolist()
+
+# Thay vì cập nhật chướng ngại vật động trong vòng lặp chính, ta gọi hàm update_moving_obstacles
+def update_moving_obstacles():
+    """Cập nhật vị trí và hướng của chướng ngại vật động."""
+    for index, obs in enumerate(moving_obstacles):
+        dx, dy = obstacle_directions[index]
+        new_x = obs.x + dx * 5
+        new_y = obs.y + dy * 5
+
+        # Kiểm tra va chạm với biên
+        if new_x < CELL_SIZE or new_x + obs.width > SCREEN_WIDTH - CELL_SIZE:
+            dx = -dx
+        if new_y < CELL_SIZE or new_y + obs.height > SCREEN_HEIGHT - CELL_SIZE:
+            dy = -dy
+
+        # Kiểm tra va chạm với chướng ngại vật tĩnh
+        for static_obs in static_obstacles:
+            if obs.colliderect(static_obs): #Sử dụng colliderect để kiểm tra va chạm.
+                # Tính vector pháp tuyến
+                normal = [0, 0]
+                if abs(obs.right - static_obs.left) < 5:  # Va chạm từ bên phải
+                    normal = [-1, 0]
+                elif abs(obs.left - static_obs.right) < 5:  # Va chạm từ bên trái
+                    normal = [1, 0]
+                elif abs(obs.bottom - static_obs.top) < 5:  # Va chạm từ phía dưới
+                    normal = [0, -1]
+                elif abs(obs.top - static_obs.bottom) < 5:  # Va chạm từ phía trên
+                    normal = [0, 1]
+
+                # Tính vận tốc phản xạ
+                new_velocity = reflect_velocity([dx, dy], normal)
+                dx, dy = new_velocity
+
+        # Cập nhật vị trí
+        obstacle_directions[index] = (dx, dy)
+        obs.x += dx * 5
+        obs.y += dy * 5
 
 # Vòng lặp chính
 running = True
@@ -87,13 +114,13 @@ clock = pygame.time.Clock()
 while running:
     screen.fill(WHITE)
 
-    # Vẽ môi trường và chướng ngại vật
+    # Vẽ môi trường
     for obs in static_obstacles:
         pygame.draw.rect(screen, BLUE, obs)
     for obs in moving_obstacles:
         pygame.draw.rect(screen, RED, obs)
 
-    # Vẽ điểm bắt đầu (robot) và điểm đích
+    # Vẽ robot và điểm đích
     robot.draw(screen)
     pygame.draw.rect(screen, YELLOW, goal_point)
 
@@ -102,34 +129,11 @@ while running:
         pygame.draw.circle(screen, GREEN, trail, 3)
 
     # Cập nhật vị trí chướng ngại vật động
-    for index, obs in enumerate(moving_obstacles):
-        dx, dy = obstacle_directions[index]
-        new_x = obs.x + dx * 5
-        new_y = obs.y + dy * 5
-
-        can_move = True
-
-        if new_x < CELL_SIZE or new_x + obs.width > SCREEN_WIDTH - CELL_SIZE or new_y < CELL_SIZE or new_y + obs.height > SCREEN_HEIGHT - CELL_SIZE:
-            can_move = False
-
-        if can_move:
-            new_col = new_x // CELL_SIZE
-            new_row = new_y // CELL_SIZE
-            if tiled_map[new_row][new_col] == 1:
-                can_move = False
-
-        if can_move:
-            obs.x = new_x
-            obs.y = new_y
-        else:
-            obstacle_directions[index] = (-dx, -dy)
+    update_moving_obstacles()
 
     # Cập nhật vị trí robot
     robot.move()
     robot_trail.append(robot.get_position())
-
-    # Lưu trạng thái
-    save_positions_to_file()
 
     # Kiểm tra sự kiện
     for event in pygame.event.get():
