@@ -1,28 +1,37 @@
-# File: robot.py
+# robot.py
+
+import pygame
 
 class Robot:
-    def __init__(self, x, y, size=20):
-        self.position = [x, y]
+    def __init__(self, x, y, size):
+        self.x = x
+        self.y = y
         self.size = size
-        self.velocity = [0, 0]
+        self.velocity_x = 0
+        self.velocity_y = 0
 
-    def perform_action(self, action):
-        """
-        action[0]: Change in velocity x
-        action[1]: Change in velocity y
-        """
-        self.velocity[0] += action[0]
-        self.velocity[1] += action[1]
-        self.position[0] += self.velocity[0]
-        self.position[1] += self.velocity[1]
+    def move(self):
+        """Cập nhật vị trí robot dựa trên vận tốc."""
+        self.x += self.velocity_x
+        self.y += self.velocity_y
 
-        # Keep robot within bounds
-        self.position[0] = max(0, min(self.position[0], 800))  # Assuming width=800
-        self.position[1] = max(0, min(self.position[1], 600))  # Assuming height=600
+        # Giới hạn trong màn hình
+        self.x = max(self.size, min(self.x, 800 - self.size))
+        self.y = max(self.size, min(self.y, 600 - self.size))
 
-    def get_state(self):
-        """Return current state."""
-        return {
-            "position": self.position,
-            "velocity": self.velocity
-        }
+    def set_velocity(self, velocity_x, velocity_y):
+        """Cài đặt vận tốc cho robot."""
+        self.velocity_x = velocity_x
+        self.velocity_y = velocity_y
+
+    def get_position(self):
+        """Trả về vị trí hiện tại của robot."""
+        return int(self.x), int(self.y)
+
+    def get_velocity(self):
+        """Trả về vận tốc hiện tại của robot."""
+        return self.velocity_x, self.velocity_y
+
+    def draw(self, screen):
+        """Vẽ robot lên màn hình."""
+        pygame.draw.circle(screen, (0, 0, 255), (int(self.x), int(self.y)), self.size)
