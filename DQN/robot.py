@@ -1,61 +1,76 @@
-import pygame
+import numpy as np
+import random
+from robot import Robot
 
-class Robot:
-    def __init__(self, x, y, size):
-        self.x = x
-        self.y = y
-        self.size = size
-        self.velocity_x = 0
-        self.velocity_y = 0
+class Environment:
+    def __init__(self, width, height, num_dynamic_obs=5, num_static_obs=5):
+        self.width = width
+        self.height = height
+        self.robot = Robot(x=width // 2, y=height // 2, size=20)
+        self.dynamic_obstacles = self._create_dynamic_obstacles(num_dynamic_obs)
+        self.static_obstacles = self._create_static_obstacles(num_static_obs)
+        self.goal = [width - 40, height - 40]
 
-    # def move(self, action=None):
-    #     """
-    #     Di chuyển robot.
-    #     Nếu `action` được cung cấp, di chuyển theo [dx, dy].
-    #     Nếu không, di chuyển dựa trên vận tốc hiện tại.
-    #     """
-    #     if action:
-    #         self.x += action[0]
-    #         self.y += action[1]
-    #     else:
-    #         self.x += self.velocity_x
-    #         self.y += self.velocity_y
+    def _create_dynamic_obstacles(self, num):
+        obstacles = []
+        for _ in range(num):
+            x, y = random.randint(40, self.width - 40), random.randint(40, self.height - 40)
+            size = random.randint(10, 20)
+            velocity = [random.choice([-1, 1]), random.choice([-1, 1])]
+            obstacles.append({'position': [x, y], 'size': size, 'velocity': velocity})
+        return obstacles
 
-    #     # Giới hạn trong màn hình
-    #     self.x = max(self.size, min(self.x, 800 - self.size))
-    #     self.y = max(self.size, min(self.y, 600 - self.size))
+    def _create_static_obstacles(self, num):
+        obstacles = []
+        for _ in range(num):
+            x, y = random.randint(40, self.width - 40), random.randint(40, self.height - 40)
+            size = random.randint(20, 50)
+            obstacles.append({'position': [x, y], 'size': size})
+        return obstacles
 
-    def move(self, action=None):
-        """
-        Di chuyển robot.
-        Nếu `action` được cung cấp, di chuyển theo [dx, dy].
-        Nếu không, di chuyển dựa trên vận tốc hiện tại.
-        """
-        if action is not None and isinstance(action, (list, tuple)) and len(action) == 2:
-            self.x += action[0]
-            self.y += action[1]
-        else:
-            self.x += self.velocity_x
-            self.y += self.velocity_y
+    def step(self, action):
+        self.robot.move(action)
+        self._update_moving_obstacles()
+        done = self._check_collision()
+        reward = self._calculate_reward(done)
+        return self._get_state(), reward, done
 
-        # Giới hạn trong màn hình
-        self.x = max(self.size, min(self.x, 800 - self.size))
-        self.y = max(self.size, min(self.y, 600 - self.size))
+    def _update_moving_obstacles(self):
+        for obs in self.dynamic_obstacles:
+            dx, dy = obs['velocity']
+            obs['position'][0] += dx * 5
+            obs['position'][1] += dy * 5
+            if obs['position'][0] < 0 or obs['position'][0] > self.width:
+                obs['velocity'][0] = -dx
+            if obs['position'][1] < 0 or obs['position'][1] > self.height:
+                obs['velocity'][1] = -dy
 
+    def _check_collision(self):
+        rx, ry = self.robot.get_position()
+        for obs in self.dynamic_obstacles + self.static_obstacles:
+            ox, oy = obs['position']
+            distance = np.linalg.norm([rx - ox, ry - oy])
+            if distance < (self.robot.size + obs['size']) / 2:
+                return True
+        return False
 
-    def set_velocity(self, velocity_x, velocity_y):
-        """Cài đặt vận tốc cho robot."""
-        self.velocity_x = velocity_x
-        self.velocity_y = velocity_y
+    def _calculate_reward(self, collision):
+        if collision:
+            return -100
+        goal_distance = np.linalg.norm([self.robot.x - self.goal[0], self.robot.y - self.goal[1]])
+        return -goal_distance
 
-    def get_position(self):
-        """Trả về vị trí hiện tại của robot."""
-        return int(self.x), int(self.y)
+    def _get_state(self):
+        state = {
+            'robot': self.robot.get_position(),
+            'dynamic_obstacles': [(obs['position'], obs['velocity']) for obs in self.dynamic_obstacles],
+            'static_obstacles': [obs['position'] for obs in self.static_obstacles],
+            'goal': self.goal
+        }
+        return state
 
-    def get_velocity(self):
-        """Trả về vận tốc hiện tại của robot."""
-        return self.velocity_x, self.velocity_y
-
-    def draw(self, screen):
-        """Vẽ robot lên màn hình."""
-        pygame.draw.circle(screen, (0, 0, 255), (int(self.x), int(self.y)), self.size)
+    def reset(self):
+        self.robot = Robot(x=self.width // 2, y=self.height // 2, size=20)
+        self.dynamic_obstacles = self._create_dynamic_obstacles(len(self.dynamic_obstacles))
+        self.static_obstacles = self._create_static_obstacles(len(self.static_obstacles))
+        return self._get_state()

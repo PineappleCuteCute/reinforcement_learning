@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from collections import deque
 import random
+from collections import deque
 
 class DQN(nn.Module):
     def __init__(self, state_size, action_size):
@@ -31,9 +30,8 @@ class ReplayMemory:
         return len(self.memory)
 
 def select_action(state, policy_net, epsilon, action_size):
-    """Chọn hành động bằng epsilon-greedy."""
     if random.random() < epsilon:
-        return random.randint(0, action_size - 1)  # Random action
+        return random.randint(0, action_size - 1)
     else:
         with torch.no_grad():
-            return policy_net(state).argmax().item()  # Greedy action
+            return policy_net(state).argmax().item()

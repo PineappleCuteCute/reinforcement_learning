@@ -5,3 +5,11 @@ obstacles, robot
 -slide định nghĩa lại đầu vào, đầu ra, reward, con đường vẽ ra, tiêu chí đường đi, tránh chướng ngại vật thế nào, ra sao
 !không được va chạm các obstacles(dynnamic, static)
 -định nghĩa các chướng ngại vật(vector, size, velocities, position)
+
+Nhóm/ "Đào Thành Mạnh
+Hà Trung Kiên"	"
+- tạo vector lộ trình di chuyển cho chướng ngại vật động, nẩy phản xạ, khi nào -dx -dy, 
+- định nghĩa state, action, rewward, 
+- tạo môi trường, 
+- tranning, chướng ngại vật đông tĩnh lao vào nhau, 
+- robot không va chạm vao chướng ngại vật,//
