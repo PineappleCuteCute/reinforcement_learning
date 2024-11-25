@@ -70,7 +70,43 @@ def reflect_velocity(velocity, normal): #Tính vận tốc phản xạ dựa tr�
     v_new = velocity - 2 * np.dot(velocity, normal) * normal
     return v_new.tolist()
 
-# Thay vì cập nhật chướng ngại vật động trong vòng lặp chính, ta gọi hàm update_moving_obstacles
+# # Thay vì cập nhật chướng ngại vật động trong vòng lặp chính, ta gọi hàm update_moving_obstacles
+# def update_moving_obstacles():
+#     """Cập nhật vị trí và hướng của chướng ngại vật động."""
+#     for index, obs in enumerate(moving_obstacles):
+#         dx, dy = obstacle_directions[index]
+#         new_x = obs.x + dx * 5
+#         new_y = obs.y + dy * 5
+
+#         # Kiểm tra va chạm với biên
+#         if new_x < CELL_SIZE or new_x + obs.width > SCREEN_WIDTH - CELL_SIZE:
+#             dx = -dx
+#         if new_y < CELL_SIZE or new_y + obs.height > SCREEN_HEIGHT - CELL_SIZE:
+#             dy = -dy
+
+#         # Kiểm tra va chạm với chướng ngại vật tĩnh
+#         for static_obs in static_obstacles:
+#             if obs.colliderect(static_obs): #Sử dụng colliderect để kiểm tra va chạm.
+#                 # Tính vector pháp tuyến
+#                 normal = [0, 0]
+#                 if abs(obs.right - static_obs.left) < 5:  # Va chạm từ bên phải
+#                     normal = [-1, 0]
+#                 elif abs(obs.left - static_obs.right) < 5:  # Va chạm từ bên trái
+#                     normal = [1, 0]
+#                 elif abs(obs.bottom - static_obs.top) < 5:  # Va chạm từ phía dưới
+#                     normal = [0, -1]
+#                 elif abs(obs.top - static_obs.bottom) < 5:  # Va chạm từ phía trên
+#                     normal = [0, 1]
+
+#                 # Tính vận tốc phản xạ
+#                 new_velocity = reflect_velocity([dx, dy], normal)
+#                 dx, dy = new_velocity
+
+#         # Cập nhật vị trí
+#         obstacle_directions[index] = (dx, dy)
+#         obs.x += dx * 5
+#         obs.y += dy * 5
+
 def update_moving_obstacles():
     """Cập nhật vị trí và hướng của chướng ngại vật động."""
     for index, obs in enumerate(moving_obstacles):
@@ -86,26 +122,31 @@ def update_moving_obstacles():
 
         # Kiểm tra va chạm với chướng ngại vật tĩnh
         for static_obs in static_obstacles:
-            if obs.colliderect(static_obs): #Sử dụng colliderect để kiểm tra va chạm.
+            if obs.colliderect(static_obs):  # Sử dụng colliderect để kiểm tra va chạm
                 # Tính vector pháp tuyến
                 normal = [0, 0]
                 if abs(obs.right - static_obs.left) < 5:  # Va chạm từ bên phải
                     normal = [-1, 0]
+                    obs.x = static_obs.left - obs.width  # Đẩy ra bên trái
                 elif abs(obs.left - static_obs.right) < 5:  # Va chạm từ bên trái
                     normal = [1, 0]
+                    obs.x = static_obs.right  # Đẩy ra bên phải
                 elif abs(obs.bottom - static_obs.top) < 5:  # Va chạm từ phía dưới
                     normal = [0, -1]
+                    obs.y = static_obs.top - obs.height  # Đẩy lên trên
                 elif abs(obs.top - static_obs.bottom) < 5:  # Va chạm từ phía trên
                     normal = [0, 1]
+                    obs.y = static_obs.bottom  # Đẩy xuống dưới
 
                 # Tính vận tốc phản xạ
                 new_velocity = reflect_velocity([dx, dy], normal)
                 dx, dy = new_velocity
 
-        # Cập nhật vị trí
+        # Cập nhật vị trí và vận tốc
         obstacle_directions[index] = (dx, dy)
         obs.x += dx * 5
         obs.y += dy * 5
+
 
 # Vòng lặp chính
 running = True
