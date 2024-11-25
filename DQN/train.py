@@ -46,7 +46,7 @@ def optimize_model():
     optimizer.step()
 
 # Vòng lặp huấn luyện
-for episode in range(1000):
+for episode in range(100):
     state = env.reset()
     total_reward = 0
 
@@ -69,3 +69,8 @@ for episode in range(1000):
         target_net.load_state_dict(policy_net.state_dict())
 
     print(f"Episode {episode}: Total Reward: {total_reward}")
+
+# Lưu policy_net sau khi huấn luyện
+torch.save(policy_net.state_dict(), "policy_net.pth")
+print("Mô hình đã được lưu vào file policy_net.pth")
+

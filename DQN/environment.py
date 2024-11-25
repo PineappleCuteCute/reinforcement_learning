@@ -61,13 +61,24 @@ class Environment:
         return -goal_distance
 
     def _get_state(self):
-        state = {
-            'robot': self.robot.get_position(),
-            'dynamic_obstacles': [(obs['position'], obs['velocity']) for obs in self.dynamic_obstacles],
-            'static_obstacles': [obs['position'] for obs in self.static_obstacles],
-            'goal': self.goal
-        }
-        return state
+        """Trả về trạng thái hiện tại dưới dạng vector."""
+        # Lấy vị trí robot
+        state = list(self.robot.get_position())
+
+        # Thêm vị trí và vận tốc của chướng ngại vật động
+        for obs in self.dynamic_obstacles:
+            state.extend(obs['position'])
+            state.extend(obs['velocity'])
+
+        # Thêm vị trí của chướng ngại vật tĩnh
+        for obs in self.static_obstacles:
+            state.extend(obs['position'])
+
+        # Thêm vị trí mục tiêu
+        state.extend(self.goal)
+
+        return np.array(state, dtype=np.float32)  # Trả về mảng numpy
+
 
     def reset(self):
         self.robot = Robot(x=self.width // 2, y=self.height // 2, size=20)
