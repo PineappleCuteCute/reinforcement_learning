@@ -77,15 +77,35 @@ class Environment:
         goal_distance = np.linalg.norm([self.robot.x - self.goal[0], self.robot.y - self.goal[1]])
         return -goal_distance  # Phần thưởng âm dựa trên khoảng cách đến mục tiêu
 
+    # def _get_state(self):
+    #     """Lấy trạng thái."""
+    #     state = {
+    #         'robot': self.robot.get_position(),
+    #         'dynamic_obstacles': [(obs['position'], obs['velocity']) for obs in self.dynamic_obstacles],
+    #         'static_obstacles': [obs['position'] for obs in self.static_obstacles],
+    #         'goal': self.goal
+    #     }
+    #     return state
+    
     def _get_state(self):
-        """Lấy trạng thái."""
-        state = {
-            'robot': self.robot.get_position(),
-            'dynamic_obstacles': [(obs['position'], obs['velocity']) for obs in self.dynamic_obstacles],
-            'static_obstacles': [obs['position'] for obs in self.static_obstacles],
-            'goal': self.goal
-        }
-        return state
+    """Trả về trạng thái hiện tại dưới dạng vector."""
+    # Lấy vị trí robot
+    state = self.robot.get_position()
+
+    # Thêm vị trí và vận tốc của chướng ngại vật động
+    for obs in self.dynamic_obstacles:
+        state.extend(obs['position'])  # Vị trí
+        state.extend(obs['velocity'])  # Vận tốc
+
+    # Thêm vị trí của chướng ngại vật tĩnh
+    for obs in self.static_obstacles:
+        state.extend(obs['position'])
+
+    # Thêm vị trí mục tiêu
+    state.extend(self.goal)
+
+    return np.array(state, dtype=np.float32)  # Trả về mảng numpy
+
 
     def reset(self):
         """Khởi động lại môi trường."""
