@@ -69,7 +69,7 @@ def update_moving_obstacles():
         new_x = obs.x + dx * 5
         new_y = obs.y + dy * 5
 
-        # Kiểm tra va chạm với biên
+        # Kiểm tra va chạm với biên!!!!!
         if new_x < CELL_SIZE or new_x + obs.width > SCREEN_WIDTH - CELL_SIZE:
             dx = -dx
         if new_y < CELL_SIZE or new_y + obs.height > SCREEN_HEIGHT - CELL_SIZE:

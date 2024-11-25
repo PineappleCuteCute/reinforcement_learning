@@ -9,7 +9,9 @@ obstacles, robot
 Nhóm/ "Đào Thành Mạnh
 Hà Trung Kiên"	"
 - tạo vector lộ trình di chuyển cho chướng ngại vật động, nẩy phản xạ, khi nào -dx -dy, 
-- định nghĩa state, action, rewward, 
-- tạo môi trường, 
+- định nghĩa    state, (environment.py)
+                action, (train.py) -> Robot nhận action từ env.step() và di chuyển theo vector này(environment.py)
+                reward, (environment.py)
+- tạo môi trường, (environment.py)
 - tranning?, chướng ngại vật đông tĩnh lao vào nhau, 
 - robot không va chạm vao chướng ngại vật,//

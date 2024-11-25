@@ -51,9 +51,9 @@ for episode in range(100):
     state = env.reset()
     total_reward = 0
 
-    for t in range(200):
+    for t in range(200): #định nghĩa action!!!!
         action = select_action(torch.tensor(state, dtype=torch.float32), policy_net, epsilon, action_size)
-        action_mapping = [[0, -1], [0, 1], [-1, 0], [1, 0], [0, 0]]
+        action_mapping = [[0, -1], [0, 1], [-1, 0], [1, 0], [0, 0]] 
         next_state, reward, done = env.step(action_mapping[action])
         memory.push(state, action, reward, next_state, done)
         state = next_state
