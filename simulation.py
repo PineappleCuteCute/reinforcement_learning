@@ -117,35 +117,62 @@ def update_moving_obstacles():
         # Kiểm tra va chạm với biên
         if new_x < CELL_SIZE or new_x + obs.width > SCREEN_WIDTH - CELL_SIZE:
             dx = -dx
+            # Thêm độ ngẫu nhiên vào vận tốc sau phản xạ
+            dx += random.uniform(-0.5, 0.5)
         if new_y < CELL_SIZE or new_y + obs.height > SCREEN_HEIGHT - CELL_SIZE:
             dy = -dy
+            dy += random.uniform(-0.5, 0.5)
 
         # Kiểm tra va chạm với chướng ngại vật tĩnh
+        collided = False
         for static_obs in static_obstacles:
-            if obs.colliderect(static_obs):  # Sử dụng colliderect để kiểm tra va chạm
-                # Tính vector pháp tuyến
-                normal = [0, 0]
-                if abs(obs.right - static_obs.left) < 5:  # Va chạm từ bên phải
-                    normal = [-1, 0]
-                    obs.x = static_obs.left - obs.width  # Đẩy ra bên trái
-                elif abs(obs.left - static_obs.right) < 5:  # Va chạm từ bên trái
-                    normal = [1, 0]
-                    obs.x = static_obs.right  # Đẩy ra bên phải
-                elif abs(obs.bottom - static_obs.top) < 5:  # Va chạm từ phía dưới
-                    normal = [0, -1]
-                    obs.y = static_obs.top - obs.height  # Đẩy lên trên
-                elif abs(obs.top - static_obs.bottom) < 5:  # Va chạm từ phía trên
-                    normal = [0, 1]
-                    obs.y = static_obs.bottom  # Đẩy xuống dưới
+            if obs.colliderect(static_obs):  # Phát hiện va chạm
+                collided = True
+                overlap_x = min(static_obs.right - obs.left, obs.right - static_obs.left)
+                overlap_y = min(static_obs.bottom - obs.top, obs.bottom - static_obs.top)
 
-                # Tính vận tốc phản xạ
-                new_velocity = reflect_velocity([dx, dy], normal)
-                dx, dy = new_velocity
+                if overlap_x < overlap_y:  # Va chạm theo trục X
+                    if obs.centerx < static_obs.centerx:  # Từ trái
+                        obs.x = static_obs.left - obs.width  # Đẩy ra trái
+                        dx = -abs(dx)  # Đổi hướng sang trái
+                    else:  # Từ phải
+                        obs.x = static_obs.right  # Đẩy ra phải
+                        dx = abs(dx)  # Đổi hướng sang phải
+                else:  # Va chạm theo trục Y
+                    if obs.centery < static_obs.centery:  # Từ trên
+                        obs.y = static_obs.top - obs.height  # Đẩy lên trên
+                        dy = -abs(dy)  # Đổi hướng lên trên
+                    else:  # Từ dưới
+                        obs.y = static_obs.bottom  # Đẩy xuống dưới
+                        dy = abs(dy)  # Đổi hướng xuống dưới
 
-        # Cập nhật vị trí và vận tốc
+                # Thêm độ ngẫu nhiên để tản hướng sau phản xạ
+                dx += random.uniform(-0.5, 0.5)
+                dy += random.uniform(-0.5, 0.5)
+
+                # Đảm bảo không quá nhanh hoặc quá chậm
+                dx = max(min(dx, 2), -2)
+                dy = max(min(dy, 2), -2)
+                break  # Chỉ xử lý với chướng ngại vật va chạm đầu tiên
+
+        # Nếu không va chạm, cập nhật vị trí
+        if not collided:
+            obs.x = new_x
+            obs.y = new_y
+        else:
+            # Cập nhật hướng vận tốc sau xử lý va chạm
+            obstacle_directions[index] = (dx, dy)
+
+        # Đảm bảo vận tốc không quá nhỏ
+        if abs(dx) < 0.5:
+            dx = random.choice([-1, 1]) * 0.5
+        if abs(dy) < 0.5:
+            dy = random.choice([-1, 1]) * 0.5
+
+        # Cập nhật vận tốc và vị trí cuối cùng
         obstacle_directions[index] = (dx, dy)
-        obs.x += dx * 5
-        obs.y += dy * 5
+        obs.x += dx * 0.01
+        obs.y += dy * 0.01
 
 
 # Vòng lặp chính

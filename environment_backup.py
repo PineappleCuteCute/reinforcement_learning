@@ -1,196 +1,99 @@
-import pygame
 import numpy as np
 import random
-import json
-from robot import Robot  # Import lớp Robot từ file robot.py
+from robot import Robot
 
-# Khởi tạo Pygame
-pygame.init()
+class Environment:
+    def __init__(self, width, height, num_dynamic_obs=5, num_static_obs=5):
+        self.width = width
+        self.height = height
+        self.robot = Robot(x=width // 2, y=height // 2, size=20)  # Robot tại trung tâm
+        self.dynamic_obstacles = self._create_dynamic_obstacles(num_dynamic_obs)
+        self.static_obstacles = self._create_static_obstacles(num_static_obs)
+        self.goal = [width - 40, height - 40]  # Mục tiêu của robot
 
-# Thiết lập cửa sổ Pygame
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('Môi trường với chướng ngại vật tĩnh và động, điểm bắt đầu và đích')
+    def _create_dynamic_obstacles(self, num):
+        """Khởi tạo chướng ngại vật động."""
+        obstacles = []
+        for _ in range(num):
+            x, y = random.randint(40, self.width - 40), random.randint(40, self.height - 40)
+            size = random.randint(10, 20)
+            velocity = [random.choice([-1, 1]), random.choice([-1, 1])]
+            obstacles.append({'position': [x, y], 'size': size, 'velocity': velocity})
+        return obstacles
 
-# Định nghĩa màu sắc
-WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
+    def _create_static_obstacles(self, num):
+        """Khởi tạo chướng ngại vật tĩnh."""
+        obstacles = []
+        for _ in range(num):
+            x, y = random.randint(40, self.width - 40), random.randint(40, self.height - 40)
+            size = random.randint(20, 50)
+            obstacles.append({'position': [x, y], 'size': size})
+        return obstacles
 
-# Định nghĩa các thông số ô trong bản đồ
-CELL_SIZE = 20
-ROWS = SCREEN_HEIGHT // CELL_SIZE
-COLS = SCREEN_WIDTH // CELL_SIZE
+    def step(self, action):
+        """
+        Thực hiện một bước mô phỏng:
+        - Action là vector [dx, dy] cho robot.
+        """
+        self.robot.move(action)
 
-# Khởi tạo môi trường với một số chướng ngại vật tĩnh
-tiled_map = np.zeros((ROWS, COLS))
-static_obstacles = []
+        # Cập nhật chướng ngại vật động
+        for obs in self.dynamic_obstacles:
+            x, y = obs['position']
+            dx, dy = obs['velocity']
+            new_x, new_y = x + dx * 2, y + dy * 2
 
-# Định nghĩa một số tường trong môi trường
-def create_open_map():
-    for _ in range(20):
-        start_row = random.randint(1, ROWS - 2)
-        start_col = random.randint(1, COLS - 2)
-        length = random.randint(3, 8)
-        if random.choice([True, False]):
-            for i in range(length):
-                if start_col + i < COLS - 1:
-                    tiled_map[start_row][start_col + i] = 1
-                    static_obstacles.append(pygame.Rect((start_col + i) * CELL_SIZE, start_row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
-        else:
-            for i in range(length):
-                if start_row + i < ROWS - 1:
-                    tiled_map[start_row + i][start_col] = 1
-                    static_obstacles.append(pygame.Rect(start_col * CELL_SIZE, (start_row + i) * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+            # Phản xạ khi va chạm biên
+            if new_x < 0 or new_x > self.width:
+                dx = -dx
+            if new_y < 0 or new_y > self.height:
+                dy = -dy
 
-create_open_map()
+            # Phản xạ khi va chạm chướng ngại vật tĩnh
+            for static_obs in self.static_obstacles:
+                sx, sy = static_obs['position']
+                distance = np.linalg.norm([new_x - sx, new_y - sy])
+                if distance < (obs['size'] + static_obs['size']) / 2:
+                    dx, dy = -dx, -dy
 
-# Định nghĩa 20 chướng ngại vật động
-moving_obstacles = [pygame.Rect(np.random.randint(1, COLS-1) * CELL_SIZE,
-                                np.random.randint(1, ROWS-1) * CELL_SIZE,
-                                CELL_SIZE - 5, CELL_SIZE - 5) for _ in range(20)]
+            # Cập nhật vị trí
+            obs['position'] = [new_x, new_y]
+            obs['velocity'] = [dx, dy]
 
-# Hướng di chuyển của chướng ngại vật động
-obstacle_directions = [(np.random.choice([-1, 1]), np.random.choice([-1, 1])) for _ in range(20)]
+        # Kiểm tra trạng thái va chạm
+        done = self._check_collision()
+        reward = self._calculate_reward(done)
 
-# Khởi tạo Robot từ lớp Robot đã định nghĩa
-robot = Robot(CELL_SIZE, CELL_SIZE, CELL_SIZE - 5)
+        return self._get_state(), reward, done
 
-# Định nghĩa điểm đích
-goal_point = pygame.Rect(SCREEN_WIDTH - 2 * CELL_SIZE, SCREEN_HEIGHT - 2 * CELL_SIZE, CELL_SIZE - 5, CELL_SIZE - 5)
+    def _check_collision(self):
+        """Kiểm tra va chạm giữa robot và chướng ngại vật."""
+        rx, ry = self.robot.get_position()
+        for obs in self.dynamic_obstacles:
+            ox, oy = obs['position']
+            distance = np.linalg.norm([rx - ox, ry - oy])
+            if distance < (self.robot.size + obs['size']) / 2:
+                return True
+        for obs in self.static_obstacles:
+            ox, oy = obs['position']
+            distance = np.linalg.norm([rx - ox, ry - oy])
+            if distance < (self.robot.size + obs['size']) / 2:
+                return True
+        return False
 
-# Hàm lưu vị trí của robot, chướng ngại vật tĩnh và động vào file JSON theo dạng lịch sử
-def save_positions_to_file():
-    try:
-        with open('positions.json', 'r') as f:
-            positions_data = json.load(f)
-            if not isinstance(positions_data, list):
-                positions_data = []  # Nếu không phải là danh sách, khởi tạo lại
-    except (FileNotFoundError, json.JSONDecodeError):
-        positions_data = []
+    def _calculate_reward(self, collision):
+        """Tính reward dựa trên trạng thái."""
+        if collision:
+            return -100  # Phạt nếu va chạm
+        goal_distance = np.linalg.norm([self.robot.x - self.goal[0], self.robot.y - self.goal[1]])
+        return -goal_distance  # Phần thưởng âm dựa trên khoảng cách đến mục tiêu
 
-    new_entry = {
-        "robot": {
-            "position": robot.get_position()
-        },
-        "static_obstacles": [],
-        "moving_obstacles": []
-    }
-
-    # Lưu tọa độ của chướng ngại vật tĩnh
-    for obs in static_obstacles:
-        new_entry["static_obstacles"].append({
-            "x": int(obs.x),
-            "y": int(obs.y),
-            "width": int(obs.width),
-            "height": int(obs.height)
-        })
-
-    # Lưu tọa độ của chướng ngại vật động
-    for obs in moving_obstacles:
-        new_entry["moving_obstacles"].append({
-            "x": int(obs.x),
-            "y": int(obs.y)
-        })
-
-    positions_data.append(new_entry)
-
-    # Ghi dữ liệu vào file JSON
-    with open('positions.json', 'w') as f:
-        json.dump(positions_data, f, indent=4)
-
-# Hàm lưu vận tốc của robot và chướng ngại vật động vào file JSON theo dạng lịch sử
-def save_velocities_to_file():
-    try:
-        with open('velocities.json', 'r') as f:
-            velocities_data = json.load(f)
-            if not isinstance(velocities_data, list):
-                velocities_data = []  # Nếu không phải là danh sách, khởi tạo lại
-    except (FileNotFoundError, json.JSONDecodeError):
-        velocities_data = []
-
-    new_entry = {
-        "robot_velocity": robot.get_velocity(),
-        "moving_obstacle_velocities": []
-    }
-
-    # Lưu vận tốc của chướng ngại vật động
-    for dx, dy in obstacle_directions:
-        new_entry["moving_obstacle_velocities"].append({
-            "dx": int(dx),
-            "dy": int(dy)
-        })
-
-    velocities_data.append(new_entry)
-
-    # Ghi dữ liệu vào file JSON
-    with open('velocities.json', 'w') as f:
-        json.dump(velocities_data, f, indent=4)
-
-# Vòng lặp chính
-running = True
-clock = pygame.time.Clock()
-
-while running:
-    screen.fill(WHITE)
-
-    # Vẽ môi trường và chướng ngại vật động
-    for obs in static_obstacles:
-        pygame.draw.rect(screen, BLUE, obs)
-    for obs in moving_obstacles:
-        pygame.draw.rect(screen, RED, obs)
-
-    # Vẽ điểm bắt đầu (robot) và điểm đích
-    robot.draw(screen)
-    pygame.draw.rect(screen, YELLOW, goal_point)
-
-    # Cập nhật vị trí chướng ngại vật động
-    for index, obs in enumerate(moving_obstacles):
-        dx, dy = obstacle_directions[index]
-        new_x = obs.x + dx * 5
-        new_y = obs.y + dy * 5
-
-        can_move = True
-
-        if new_x < CELL_SIZE or new_x + obs.width > SCREEN_WIDTH - CELL_SIZE or new_y < CELL_SIZE or new_y + obs.height > SCREEN_HEIGHT - CELL_SIZE:
-            can_move = False
-
-        if can_move:
-            new_col = new_x // CELL_SIZE
-            new_row = new_y // CELL_SIZE
-            if tiled_map[new_row][new_col] == 1:
-                can_move = False
-
-        if can_move:
-            obs.x = new_x
-            obs.y = new_y
-        else:
-            obstacle_directions[index] = (-dx, -dy)
-
-    # Cập nhật vị trí robot
-    robot.move()
-
-    # Lưu trạng thái của robot và các chướng ngại vật
-    save_positions_to_file()
-    save_velocities_to_file()
-
-    # Kiểm tra sự kiện
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                robot.set_velocity(0, -5)
-            elif event.key == pygame.K_DOWN:
-                robot.set_velocity(0, 5)
-            elif event.key == pygame.K_LEFT:
-                robot.set_velocity(-5, 0)
-            elif event.key == pygame.K_RIGHT:
-                robot.set_velocity(5, 0)
-
-    # Cập nhật màn hình
-    pygame.display.flip()
-    clock.tick(30)
-
-pygame.quit()
+    def _get_state(self):
+        """Lấy trạng thái hiện tại."""
+        state = {
+            'robot': self.robot.get_position(),
+            'dynamic_obstacles': [(obs['position'], obs['velocity']) for obs in self.dynamic_obstacles],
+            'static_obstacles': [obs['position'] for obs in self.static_obstacles],
+            'goal': self.goal
+        }
+        return state
