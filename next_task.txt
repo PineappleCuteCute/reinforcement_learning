@@ -13,5 +13,5 @@ Hà Trung Kiên"	"
                 action, (train.py) -> Robot nhận action từ env.step() và di chuyển theo vector này(environment.py)
                 reward, (environment.py)
 - tạo môi trường, (environment.py)
-- tranning?, chướng ngại vật đông tĩnh lao vào nhau, 
-- robot không va chạm vao chướng ngại vật,//
+- tranning?, chướng ngại vật đông tĩnh lao vào nhau (simulation.py)
+- robot không va chạm vao chướng ngại vật,// (simulation.py + environment.py)

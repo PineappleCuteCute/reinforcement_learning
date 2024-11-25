@@ -75,7 +75,7 @@ def save_to_csv(data):
         writer.writerow(data)
 
 # Hàm kiểm tra va chạm
-def check_collision():
+def check_collision(): #robot không va chạm vao chướng ngại vật!!!!
     """Kiểm tra va chạm giữa robot và các chướng ngại vật."""
     robot_rect = pygame.Rect(robot.x - robot.size, robot.y - robot.size, robot.size * 2, robot.size * 2)
 
@@ -94,7 +94,7 @@ def check_collision():
             exit(1)
 
 # Hàm cập nhật vị trí chướng ngại vật động
-def update_moving_obstacles():
+def update_moving_obstacles(): #tranning?, chướng ngại vật đông tĩnh lao vào nhau !!!!
     """Cập nhật vị trí và hướng của chướng ngại vật động."""
     for index, obs in enumerate(moving_obstacles):
         dx, dy = obstacle_directions[index]

@@ -103,7 +103,7 @@ class Environment:
     #             return True
     #     return False
 
-    def _check_collision(self):
+    def _check_collision(self): #robot không va chạm vao chướng ngại vật!!!!!
         """Kiểm tra va chạm giữa robot và các chướng ngại vật hiện tại."""
         rx, ry = self.robot.get_position()
         for obs in self.dynamic_obstacles + self.static_obstacles:
