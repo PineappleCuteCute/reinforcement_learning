@@ -86,25 +86,26 @@ class Environment:
     #         'goal': self.goal
     #     }
     #     return state
-    
+
     def _get_state(self):
-    """Trả về trạng thái hiện tại dưới dạng vector."""
-    # Lấy vị trí robot
-    state = self.robot.get_position()
+        """Trả về trạng thái hiện tại dưới dạng vector."""
+        # Lấy vị trí robot (chuyển thành list)
+        state = list(self.robot.get_position())
 
-    # Thêm vị trí và vận tốc của chướng ngại vật động
-    for obs in self.dynamic_obstacles:
-        state.extend(obs['position'])  # Vị trí
-        state.extend(obs['velocity'])  # Vận tốc
+        # Thêm vị trí và vận tốc của chướng ngại vật động
+        for obs in self.dynamic_obstacles:
+            state.extend(obs['position'])  # Vị trí
+            state.extend(obs['velocity'])  # Vận tốc
 
-    # Thêm vị trí của chướng ngại vật tĩnh
-    for obs in self.static_obstacles:
-        state.extend(obs['position'])
+        # Thêm vị trí của chướng ngại vật tĩnh
+        for obs in self.static_obstacles:
+            state.extend(obs['position'])
 
-    # Thêm vị trí mục tiêu
-    state.extend(self.goal)
+        # Thêm vị trí mục tiêu
+        state.extend(self.goal)
 
-    return np.array(state, dtype=np.float32)  # Trả về mảng numpy
+        return np.array(state, dtype=np.float32)  # Trả về mảng numpy
+
 
 
     def reset(self):
