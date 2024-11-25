@@ -2,6 +2,37 @@ import torch
 import torch.optim as optim
 from dqn import DQN, ReplayMemory, select_action
 from environment import Environment
+import torch.nn.functional as F
+
+def optimize_model(policy_net, target_net, memory, optimizer, gamma):
+    if len(memory) < batch_size:
+        return
+
+    # Lấy mẫu từ Replay Memory
+    transitions = memory.sample(batch_size)
+    batch = list(zip(*transitions))
+    states = torch.stack([torch.tensor(s, dtype=torch.float32) for s in batch[0]])
+    actions = torch.tensor(batch[1], dtype=torch.long)
+    rewards = torch.tensor(batch[2], dtype=torch.float32)
+    next_states = torch.stack([torch.tensor(s, dtype=torch.float32) for s in batch[3]])
+    dones = torch.tensor(batch[4], dtype=torch.bool)
+
+    # Tính giá trị Q từ policy_net
+    q_values = policy_net(states).gather(1, actions.unsqueeze(1)).squeeze(1)
+
+    # Tính giá trị Q mục tiêu từ target_net
+    next_q_values = target_net(next_states).max(1)[0].detach()
+    next_q_values[dones] = 0.0  # Nếu trạng thái kết thúc, không cộng thêm giá trị Q
+    q_targets = rewards + gamma * next_q_values
+
+    # Tính loss giữa Q hiện tại và Q mục tiêu
+    loss = F.mse_loss(q_values, q_targets)
+
+    # Tối ưu hóa mạng
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
 
 # Thông số
 width, height = 800, 600
@@ -33,17 +64,16 @@ for episode in range(1000):
         state_tensor = torch.tensor(state, dtype=torch.float32)
         action = select_action(state_tensor, policy_net, epsilon, action_size)
         next_state, reward, done = env.step(action)
-        total_reward += reward
+        next_state_tensor = torch.tensor(next_state, dtype=torch.float32)
 
         # Lưu vào Replay Memory
         memory.push(state, action, reward, next_state, done)
         state = next_state
 
-        # Tối ưu hóa DQN
-        if len(memory) >= batch_size:
-            transitions = memory.sample(batch_size)
-            optimize_model(policy_net, target_net, transitions, optimizer, gamma)
+        # Tối ưu hóa mô hình
+        optimize_model(policy_net, target_net, memory, optimizer, gamma)
 
+        total_reward += reward
         if done:
             break
 
@@ -54,4 +84,4 @@ for episode in range(1000):
     if episode % target_update == 0:
         target_net.load_state_dict(policy_net.state_dict())
 
-    print(f"Episode {episode}, Total Reward: {total_reward}")
+    print(f"Episode {episode}: Total Reward: {total_reward}")

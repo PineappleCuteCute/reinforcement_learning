@@ -1,5 +1,3 @@
-# robot.py
-
 import pygame
 
 class Robot:
@@ -10,14 +8,40 @@ class Robot:
         self.velocity_x = 0
         self.velocity_y = 0
 
-    def move(self):
-        """Cập nhật vị trí robot dựa trên vận tốc."""
-        self.x += self.velocity_x
-        self.y += self.velocity_y
+    # def move(self, action=None):
+    #     """
+    #     Di chuyển robot.
+    #     Nếu `action` được cung cấp, di chuyển theo [dx, dy].
+    #     Nếu không, di chuyển dựa trên vận tốc hiện tại.
+    #     """
+    #     if action:
+    #         self.x += action[0]
+    #         self.y += action[1]
+    #     else:
+    #         self.x += self.velocity_x
+    #         self.y += self.velocity_y
+
+    #     # Giới hạn trong màn hình
+    #     self.x = max(self.size, min(self.x, 800 - self.size))
+    #     self.y = max(self.size, min(self.y, 600 - self.size))
+
+    def move(self, action=None):
+        """
+        Di chuyển robot.
+        Nếu `action` được cung cấp, di chuyển theo [dx, dy].
+        Nếu không, di chuyển dựa trên vận tốc hiện tại.
+        """
+        if action is not None and isinstance(action, (list, tuple)) and len(action) == 2:
+            self.x += action[0]
+            self.y += action[1]
+        else:
+            self.x += self.velocity_x
+            self.y += self.velocity_y
 
         # Giới hạn trong màn hình
         self.x = max(self.size, min(self.x, 800 - self.size))
         self.y = max(self.size, min(self.y, 600 - self.size))
+
 
     def set_velocity(self, velocity_x, velocity_y):
         """Cài đặt vận tốc cho robot."""
