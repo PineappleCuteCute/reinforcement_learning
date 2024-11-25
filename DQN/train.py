@@ -7,6 +7,7 @@ from environment import Environment
 width, height = 800, 600
 env = Environment(width, height)
 state_size = len(env.reset())
+print(f"State Size During Training: {state_size}")
 action_size = 5
 gamma = 0.99
 epsilon = 1.0
