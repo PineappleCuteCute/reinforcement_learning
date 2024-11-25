@@ -16,3 +16,5 @@ Hà Trung Kiên"	"
 - tạo môi trường, (environment.py)
 - tranning?, chướng ngại vật đông tĩnh lao vào nhau (simulation.py)
 - robot không va chạm vao chướng ngại vật,// (simulation.py + environment.py)
+
+DONE TASK THIS WEEK!!!
