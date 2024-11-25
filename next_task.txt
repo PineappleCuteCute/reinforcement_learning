@@ -11,5 +11,5 @@ Hà Trung Kiên"	"
 - tạo vector lộ trình di chuyển cho chướng ngại vật động, nẩy phản xạ, khi nào -dx -dy, 
 - định nghĩa state, action, rewward, 
 - tạo môi trường, 
-- tranning, chướng ngại vật đông tĩnh lao vào nhau, 
+- tranning?, chướng ngại vật đông tĩnh lao vào nhau, 
 - robot không va chạm vao chướng ngại vật,//
