@@ -18,3 +18,9 @@ Hà Trung Kiên"	"
 - robot không va chạm vao chướng ngại vật,// (simulation.py + environment.py)
 
 DONE TASK THIS WEEK!!!
+
+next week:
+Cần:
+Input: Vị trí ban đầu robot, vị trí kết thúc (Làm sao di chuyển ừ đầu này tới đầu này mà ko va chạm với cnv động và tĩnh)
+SAC: State, action, reward (ràng buộc là ko va chạm với cnv động và tĩnh)
+Biết vị trí cnv tĩnh, chưa biết động (biết 1 phần đó)
