@@ -51,10 +51,14 @@ class DQN(nn.Module):
 #         return torch.tensor([[random.randrange(policy_net.out_features)]], dtype=torch.long)
 def select_action(state, policy_net, epsilon, action_size):
     if random.random() > epsilon:
+        # Dự đoán hành động dựa trên policy
         with torch.no_grad():
-            return policy_net(state).max(1)[1].view(1, 1)  # Lấy hành động có giá trị lớn nhất
+            state = state.unsqueeze(0)  # Nếu state là vector, chuyển thành batch
+            return policy_net(state).max(1)[1].view(1, 1)  # Chọn hành động với giá trị lớn nhất
     else:
-        return torch.tensor([[random.randrange(action_size)]], dtype=torch.long)  # Chọn ngẫu nhiên hành động
+        # Chọn hành động ngẫu nhiên
+        return torch.tensor([[random.choice(range(action_size))]], dtype=torch.long)
+
 
 
 
