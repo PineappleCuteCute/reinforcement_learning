@@ -9,17 +9,25 @@ from collections import namedtuple, deque
 # Định nghĩa ReplayMemory
 class ReplayMemory:
     def __init__(self, capacity):
+        # Initialize the memory with a specified capacity
         self.memory = deque(maxlen=capacity)
-        self.transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
-    
-    def push(self, state, action, next_state, reward):
-        self.memory.append(self.transition(state, action, next_state, reward))
-    
-    def sample(self, batch_size):
-        return random.sample(self.memory, batch_size)
     
     def __len__(self):
+        # Implement __len__ to return the number of stored transitions
         return len(self.memory)
+
+    def push(self, state, action, reward, next_state, done):
+        # Store a transition in memory
+        self.memory.append((state, action, reward, next_state, done))
+    
+    def sample(self, batch_size):
+        # Sample a batch of transitions
+        return random.sample(self.memory, batch_size)
+
+    def clear(self):
+        # Optionally, clear the memory
+        self.memory.clear()
+
 
 # Định nghĩa DQN model
 class DQN(nn.Module):
