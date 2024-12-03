@@ -4,18 +4,21 @@ from dqn import DQN, ReplayMemory, select_action, optimize_model, update_target_
 # Đảm bảo rằng bạn import đúng các lớp cần thiết
 from sac_agent import SACAgent  # SAC agent
 from environment import Environment  # Environment
+from robot import Robot
+# Định nghĩa số chiều của trạng thái và hành động
+state_dim = 2  # Tọa độ x, y của robot
+action_dim = 2  # Hành động di chuyển trong 2 chiều: [dx, dy]
 
 # Khởi tạo SAC agent
-state_dim = 2  # Ví dụ: trạng thái là vị trí robot [x, y]
-action_dim = 2  # Ví dụ: hành động di chuyển theo [dx, dy]
 sac_agent = SACAgent(state_dim, action_dim)
 
-# Đảm bảo rằng bạn khởi tạo environment đúng cách:
+# Khởi tạo môi trường
 width = 800
 height = 600
+env = Environment(width, height)  # Không truyền sac_agent vào constructor của Environment
 
-# Truyền đúng tham số vào constructor của Environment:
-env = Environment(width, height, sac_agent)  # Truyền sac_agent vào constructor của Environment
+# Khởi tạo robot và truyền sac_agent vào
+env.robot = Robot(env.cols // 2 * env.cell_size, env.rows // 2 * env.cell_size, size=10, sac_agent=sac_agent)
 
 # Thông số
 width, height = 800, 600  # Kích thước màn hình

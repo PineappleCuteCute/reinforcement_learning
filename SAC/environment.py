@@ -5,7 +5,7 @@ from robot import Robot
 from sac_agent import SACAgent  # Nhập khẩu SAC agent nếu cần
 
 class Environment:
-    def __init__(self, width, height, cell_size=20):
+    def __init__(self, width, height, cell_size=20, sac_agent=None):
         # Kích thước màn hình
         self.width = width
         self.height = height
@@ -13,9 +13,6 @@ class Environment:
         self.rows = height // cell_size
         self.cols = width // cell_size
 
-        # Khởi tạo đối tượng robot
-        self.robot = Robot(self.cols // 2 * self.cell_size, self.rows // 2 * self.cell_size, size=10)
-        
         # Khởi tạo các chướng ngại vật tĩnh
         self.static_obstacles = []
         self.create_static_obstacles()
@@ -24,13 +21,15 @@ class Environment:
         self.moving_obstacles = []
         self.create_moving_obstacles()
 
-          # Nếu sac_agent không phải là None, thì tạo robot với sac_agent
-        # Nếu sac_agent không phải là None, thì tạo robot với sac_agent
+        # Đặt mục tiêu (goal) cho robot
+        self.goal = pygame.Rect(width - 2 * cell_size, height - 2 * cell_size, cell_size - 5, cell_size - 5)
+
+        # Khởi tạo robot nếu sac_agent được cung cấp
         if sac_agent:
             self.robot = Robot(self.cols // 2 * self.cell_size, self.rows // 2 * self.cell_size, size=10, sac_agent=sac_agent)
         else:
-            self.robot = None
-            
+            self.robot = None  # Bạn có thể khởi tạo robot sau nếu cần
+
     def create_static_obstacles(self):
         """Tạo các chướng ngại vật tĩnh (có thể là các hình chữ nhật hoặc hình vuông)"""
         for _ in range(10):  # Tạo 10 chướng ngại vật tĩnh
