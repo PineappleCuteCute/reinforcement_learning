@@ -1,6 +1,8 @@
 import pygame
 import random
 import numpy as np
+from robot import Robot 
+from sac_agent import SACAgent  # Nhập khẩu SAC agent nếu cần
 
 class Environment:
     def __init__(self, width, height, cell_size=20):
@@ -22,6 +24,13 @@ class Environment:
         self.moving_obstacles = []
         self.create_moving_obstacles()
 
+          # Nếu sac_agent không phải là None, thì tạo robot với sac_agent
+        # Nếu sac_agent không phải là None, thì tạo robot với sac_agent
+        if sac_agent:
+            self.robot = Robot(self.cols // 2 * self.cell_size, self.rows // 2 * self.cell_size, size=10, sac_agent=sac_agent)
+        else:
+            self.robot = None
+            
     def create_static_obstacles(self):
         """Tạo các chướng ngại vật tĩnh (có thể là các hình chữ nhật hoặc hình vuông)"""
         for _ in range(10):  # Tạo 10 chướng ngại vật tĩnh

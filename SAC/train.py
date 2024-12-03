@@ -1,11 +1,25 @@
 import torch
 import torch.optim as optim
 from dqn import DQN, ReplayMemory, select_action, optimize_model, update_target_network
-from environment import Environment
+# Đảm bảo rằng bạn import đúng các lớp cần thiết
+from sac_agent import SACAgent  # SAC agent
+from environment import Environment  # Environment
+
+# Khởi tạo SAC agent (giả sử state_dim và action_dim đã được định nghĩa)
+state_dim = 2  # Ví dụ: trạng thái là vị trí robot [x, y]
+action_dim = 2  # Ví dụ: hành động di chuyển theo [dx, dy]
+sac_agent = SACAgent(state_dim, action_dim)
+
+# Đảm bảo rằng bạn khởi tạo environment đúng cách:
+width = 800
+height = 600
+
+# Truyền đúng tham số vào constructor của Environment:
+env = Environment(width, height, sac_agent)  # Truyền sac_agent vào constructor của Environment
 
 # Thông số
 width, height = 800, 600  # Kích thước màn hình
-env = Environment(width, height)  # Khởi tạo môi trường
+# env = Environment(width, height)  # Khởi tạo môi trường
 state_size = len(env.reset())  # Kích thước của trạng thái, tương ứng với các thông tin về môi trường
 action_size = 5  # Tổng số hành động có thể: [di chuyển lên, xuống, trái, phải, đứng im]
 gamma = 0.99  # Hệ số chiết khấu
