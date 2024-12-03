@@ -5,7 +5,7 @@ from dqn import DQN, ReplayMemory, select_action, optimize_model, update_target_
 from sac_agent import SACAgent  # SAC agent
 from environment import Environment  # Environment
 
-# Khởi tạo SAC agent (giả sử state_dim và action_dim đã được định nghĩa)
+# Khởi tạo SAC agent
 state_dim = 2  # Ví dụ: trạng thái là vị trí robot [x, y]
 action_dim = 2  # Ví dụ: hành động di chuyển theo [dx, dy]
 sac_agent = SACAgent(state_dim, action_dim)
