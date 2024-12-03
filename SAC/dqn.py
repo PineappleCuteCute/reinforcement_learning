@@ -35,9 +35,18 @@ class DQN(nn.Module):
         return self.fc3(x)
 
 # Hàm chọn hành động
-def select_action(state, policy_net, epsilon):
+# def select_action(state, policy_net, epsilon):
+#     if random.random() > epsilon:
+#         with torch.no_grad():
+#             return policy_net(state).max(1)[1].view(1, 1)
+#     else:
+#         return torch.tensor([[random.randrange(policy_net.out_features)]], dtype=torch.long)
+def select_action(state, policy_net, epsilon, action_size):
     if random.random() > epsilon:
         with torch.no_grad():
-            return policy_net(state).max(1)[1].view(1, 1)
+            return policy_net(state).max(1)[1].view(1, 1)  # Lấy hành động có giá trị lớn nhất
     else:
-        return torch.tensor([[random.randrange(policy_net.out_features)]], dtype=torch.long)
+        return torch.tensor([[random.randrange(action_size)]], dtype=torch.long)  # Chọn ngẫu nhiên hành động
+
+
+

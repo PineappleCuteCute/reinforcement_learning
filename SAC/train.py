@@ -60,7 +60,11 @@ for episode in range(100):
 
     for t in range(200):  # Số bước trong mỗi episode
         # Chọn hành động bằng cách sử dụng epsilon-greedy policy
+        action_size = len(env.action_space)  # Hoặc giá trị khác nếu bạn không dùng OpenAI Gym
         action = select_action(torch.tensor(state, dtype=torch.float32), policy_net, epsilon, action_size)
+
+
+
         
         # Mảng các hành động di chuyển (có thể mở rộng thêm các hành động)
         action_mapping = [[0, -1], [0, 1], [-1, 0], [1, 0], [0, 0]]  # [up, down, left, right, stay]
