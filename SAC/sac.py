@@ -61,10 +61,25 @@ class SAC:
 
     # Phương thức chọn hành động từ mạng Actor
     def select_action(self, state):
-        state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)  # Chuyển trạng thái sang tensor
-        action_probs = self.actor(state_tensor)  # Tính toán phân phối xác suất của các hành động
-        action = np.random.choice(len(action_probs), p=action_probs.detach().numpy()[0])  # Chọn hành động ngẫu nhiên dựa trên phân phối xác suất
+        # Chuyển state thành tensor trước khi đưa vào mạng Actor
+        state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+        
+        # Tính toán xác suất hành động từ mạng Actor
+        action_probs = self.actor(state_tensor)  # Đầu ra từ mạng Actor
+
+        # Kiểm tra kích thước của action_probs
+        print(f"Action Probs shape: {action_probs.shape}")
+
+        # Chuyển action_probs từ tensor sang mảng numpy
+        action_probs = action_probs.cpu().detach().numpy()[0]
+        print(f"Action Probs as numpy: {action_probs}")
+
+        # Chọn hành động ngẫu nhiên dựa trên phân phối xác suất
+        action = np.random.choice(len(action_probs), p=action_probs)
+
         return action
+
+
 
     # Phương thức lưu trữ các trải nghiệm (state, action, reward, next_state, done)
     def store_experience(self, state, action, reward, next_state, done):
