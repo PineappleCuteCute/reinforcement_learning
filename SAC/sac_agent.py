@@ -1,9 +1,8 @@
-# sac_agent.py
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+import gym  # Thêm thư viện gym cho môi trường
 
 class SACAgent:
     def __init__(self, state_dim, action_dim, hidden_dim=256, lr=3e-4, gamma=0.99):
@@ -21,9 +20,6 @@ class SACAgent:
         # Optimizers
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=lr)
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=lr)
-
-        # Replay Buffer
-        self.buffer = []  # Nên sử dụng một lớp Replay Buffer đầy đủ chức năng
 
     def create_actor(self):
         # Mạng Actor đơn giản
@@ -48,57 +44,49 @@ class SACAgent:
 
     def select_action(self, state):
         """Chọn hành động từ chính sách của SAC"""
-        state = torch.tensor(state, dtype=torch.float32)
+        # Kiểm tra state có phải là mảng numpy hoặc danh sách hợp lệ
+        if isinstance(state, np.ndarray):
+            state = torch.tensor(state, dtype=torch.float32)
+        elif isinstance(state, list):
+            state = torch.tensor(np.array(state), dtype=torch.float32)
+        else:
+            raise ValueError(f"Expected state to be a list or numpy array, but got {type(state)}")
+
+        # In ra state
+        print("State:", state)
+
+        # Dự đoán hành động từ actor
         with torch.no_grad():
             action = self.actor(state)
-        return action.argmax().item()  # Trả về index của hành động có giá trị cao nhất
 
-    def train(self):
-        """Huấn luyện SAC agent (phần này cần được triển khai đầy đủ)"""
-        if len(self.buffer) < 32:
-            return
+        # In ra giá trị của action (hành động)
+        print("Action values:", action)
 
-        # Sample từ replay buffer
-        batch = np.random.choice(self.buffer, 32, replace=False)
-        states, actions, rewards, next_states, dones = zip(*batch)
+        # Trả về chỉ số của hành động có giá trị cao nhất
+        return action.argmax().item()
 
-        states = torch.tensor(states, dtype=torch.float32)
-        actions = torch.tensor(actions, dtype=torch.long)
-        rewards = torch.tensor(rewards, dtype=torch.float32)
-        next_states = torch.tensor(next_states, dtype=torch.float32)
-        dones = torch.tensor(dones, dtype=torch.float32)
 
-        # Tính Q-values cho trạng thái hiện tại
-        current_q = self.critic(torch.cat([states, actions.unsqueeze(1).float()], dim=1)).squeeze()
+# Tạo môi trường CartPole-v1
+env = gym.make('CartPole-v1')
 
-        # Tính Q-values cho trạng thái tiếp theo từ mạng mục tiêu
-        with torch.no_grad():
-            next_actions = self.actor(next_states)
-            next_q = self.critic_target(torch.cat([next_states, next_actions], dim=1)).squeeze()
-            target_q = rewards + self.gamma * next_q * (1 - dones)
+# Khởi tạo agent
+state_dim = env.observation_space.shape[0]  # Kích thước state (CartPole có 4 đặc trưng)
+action_dim = env.action_space.n  # Lấy số hành động có thể thực hiện từ môi trường
+agent = SACAgent(state_dim, action_dim)
 
-        # Loss cho Critic
-        critic_loss = nn.MSELoss()(current_q, target_q)
+# Lấy state từ môi trường (lấy cả state và info)
+state, info = env.reset()
 
-        # Tối ưu hóa Critic
-        self.critic_optimizer.zero_grad()
-        critic_loss.backward()
-        self.critic_optimizer.step()
+# Kiểm tra lại state (nó phải là một numpy array hoặc list)
+print("State type:", type(state))
 
-        # Loss cho Actor
-        actor_loss = -self.critic(torch.cat([states, self.actor(states)], dim=1)).mean()
+# Gọi hàm select_action và in ra kết quả
+action_index = agent.select_action(state)
+print("Selected action index:", action_index)
 
-        # Tối ưu hóa Actor
-        self.actor_optimizer.zero_grad()
-        actor_loss.backward()
-        self.actor_optimizer.step()
+# Tiến hành bước tiếp theo trong môi trường (bước mô phỏng)
+next_state, reward, done, info = env.step(action_index)
 
-        # Cập nhật mạng mục tiêu
-        for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
-            target_param.data.copy_(0.995 * target_param.data + 0.005 * param.data)
-
-    def add_experience(self, state, action, reward, next_state, done):
-        """Thêm trải nghiệm vào replay buffer"""
-        self.buffer.append((state, action, reward, next_state, done))
-        if len(self.buffer) > 10000:
-            self.buffer.pop(0)
+# In ra kết quả bước tiếp theo
+print("Next state:", next_state)
+print("Reward:", reward)

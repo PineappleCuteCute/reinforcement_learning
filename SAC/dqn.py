@@ -30,32 +30,85 @@ class ReplayMemory:
 
 # Định nghĩa mô hình DQN
 class DQN(nn.Module):
-    def __init__(self, input_dim, output_dim):
-        super(DQN, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 128)
-        self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, output_dim)
+    # def __init__(self, state_dim, action_dim):
+    #     super(DQN, self).__init__()
+    #     self.state_size = state_dim
+    #     self.action_size = action_dim
+        
+    #      # Khởi tạo các lớp mạng
+    #     self.fc1 = nn.Linear(state_dim, 128)  # state_dim là số chiều của trạng thái
+    #     self.fc2 = nn.Linear(128, 128)
+    #     self.fc3 = nn.Linear(128, action_dim)  # action_dim là số lượng hành động
+        
+    #     self.optimizer = optim.Adam(self.parameters(), lr=0.001)
+    #     self.loss_fn = nn.MSELoss()
 
-    def forward(self, x):
-        """Xử lý thông qua các lớp fully connected"""
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        return self.fc3(x)
+    # def forward(self, state):
+    #     x = torch.relu(self.fc1(state))
+    #     x = torch.relu(self.fc2(x))
+    #     return self.fc3(x)  # Output: Q-values for all actions
+    
+    def __init__(self, state_dim, action_dim):
+        super(DQN, self).__init__()
+        self.fc1 = nn.Linear(state_dim, 128)  # Đảm bảo state_dim = 4
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, action_dim)  # Output có kích thước (action_dim)
+        
+    def forward(self, state):
+        x = torch.relu(self.fc1(state))  # Kích thước (batch_size, 128)
+        x = torch.relu(self.fc2(x))      # Kích thước (batch_size, 128)
+        x = self.fc3(x)                  # Kích thước (batch_size, action_dim)
+        return x
+    
+    def select_action(state, policy_net, epsilon, action_size):
+        if random.random() < epsilon:
+            return torch.tensor([random.randint(0, action_size - 1)], dtype=torch.long)
+        else:
+            q_values = policy_net(state)  # Output của mạng có kích thước (1, action_size)
+            return q_values.max(1)[1].view(1, 1)
+
+        
+
+# Khởi tạo DQN với các tham số state_dim và action_dim
+# Ví dụ:
+state_dim = 4  # Ví dụ trạng thái có 4 chiều
+action_dim = 5  # Ví dụ có 5 hành động
+policy_net = DQN(state_dim=state_dim, action_dim=action_dim)
+
+# In ra cấu trúc của mô hình
+print(policy_net)
+# class DQN(nn.Module):
+#     def __init__(self, input_dim, output_dim):
+#         super(DQN, self).__init__()
+#         self.fc1 = nn.Linear(input_dim, 128)
+#         self.fc2 = nn.Linear(128, 64)
+#         self.fc3 = nn.Linear(64, output_dim)
+
+#     def forward(self, x):
+#         """Xử lý thông qua các lớp fully connected"""
+#         x = torch.relu(self.fc1(x))
+#         x = torch.relu(self.fc2(x))
+#         return self.fc3(x)
 
 
 # Hàm chọn hành động
 def select_action(state, policy_net, epsilon, action_size):
-    """
-    Chọn hành động dựa trên epsilon-greedy strategy:
-    - Nếu giá trị ngẫu nhiên lớn hơn epsilon, chọn hành động tốt nhất từ mô hình.
-    - Nếu nhỏ hơn epsilon, chọn hành động ngẫu nhiên.
-    """
-    if random.random() > epsilon:
-        with torch.no_grad():
-            state = state.unsqueeze(0)  # Chuyển state thành batch
-            return policy_net(state).max(1)[1].view(1, 1)  # Chọn hành động có giá trị Q lớn nhất
+    # Đảm bảo rằng state có đúng kích thước
+    q_values = policy_net(state)  # Đầu ra từ mạng neural (batch_size, action_size)
+    print("q_values shape:", q_values.shape)  # In kích thước của q_values
+
+    if random.random() < epsilon:
+        # Chọn hành động ngẫu nhiên
+        return random.randint(0, action_size - 1)
     else:
-        return torch.tensor([[random.choice(range(action_size))]], dtype=torch.long)  # Chọn hành động ngẫu nhiên
+        # Chọn hành động với giá trị Q lớn nhất
+        # max(1) tìm giá trị lớn nhất theo chiều 1, trả về (value, index), ta lấy index (hành động)
+        if q_values.dim() > 1:  # Nếu có nhiều chiều
+            return q_values.max(1)[1].item()  # Trả về index của hành động
+        else:  # Nếu chỉ có 1 chiều
+            return q_values.max(0)[1].item()  # Trả về index của hành động
+
+
 
 
 # Hàm tối ưu hóa mô hình DQN

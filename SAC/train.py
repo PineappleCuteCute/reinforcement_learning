@@ -81,10 +81,12 @@ for episode in range(1000):
 
         # Chuyển đổi hành động (mảng di chuyển) và thực hiện bước trong môi trường
         action_mapping = [[0, -1], [0, 1], [-1, 0], [1, 0], [0, 0]]  # Các hành động di chuyển [up, down, left, right, stay]
-        next_state, reward, done = env.step(action_mapping[action.item()])  # Thực hiện hành động và nhận trạng thái tiếp theo
+        next_state, reward, done = env.step(action_mapping[action])  # Không cần gọi item() nữa
+ # Thực hiện hành động và nhận trạng thái tiếp theo
 
         # Lưu trữ transition vào bộ nhớ replay
-        memory.push(state, action.item(), reward, next_state, done)
+        memory.push(state, action, reward, next_state, done)  # Không cần gọi item() nữa
+
 
         state = next_state  # Cập nhật trạng thái
 
