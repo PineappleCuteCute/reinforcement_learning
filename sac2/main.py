@@ -106,10 +106,10 @@ def move_robot():
         collision = check_collision()
         if collision == "goal":
             print("Robot đã đến đích!")
-            done = True
+            # done = True
         elif collision:
             print("Robot va chạm với chướng ngại vật! Dừng lại.")
-            done = True
+            # done = True
 
         # Vẽ lại môi trường
         draw_environment()
